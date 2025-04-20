@@ -365,13 +365,13 @@
 
   /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
-    /* ----- Populate prices ----- */
-    document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
-    document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
-    document.getElementById('deposit-description').innerHTML =
-      `Secure your Awesome Product now! Pay <strong>${formatCurrency(depositAmount)}</strong> today (30%) and the remaining <strong>${formatCurrency(FULL_PRICE-depositAmount)}</strong> upon shipment.`;
-    document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
-    const buyNowDisp = document.getElementById('buy-now-price-display');
+/* ----- Populate prices ----- */
+document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
+document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
+document.getElementById('deposit-description').innerHTML = 
+  "Secure your Awesome Product now! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today (30%) and the remaining <strong>" + formatCurrency(FULL_PRICE-depositAmount) + "</strong> upon shipment.";
+document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
+const buyNowDisp = document.getElementById('buy-now-price-display');
     buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
 
     /* ----- Setup close buttons for all modals ----- */
