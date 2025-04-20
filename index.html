@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awesome Product - Pre-Order Now!</title>
+    <style>
+        /* --- Global Styles & Fonts --- */
+        :root {
+            --primary-color: #05A862; /* Kickstarter Green */
+            --primary-color-darker: #048a50;
+            --primary-color-glow: rgba(5, 168, 98, 0.15);
+            --secondary-color: #1f1f1f;
+            --light-gray: #f0f0f0;
+            --medium-gray: #808080;
+            --border-color-glass: rgba(255, 255, 255, 0.3);
+            --border-color-input: #d0d0d0;
+            --white: #FFFFFF;
+            --body-bg-start: #ffffff;
+            --body-bg-end: #f7f8f9;
+            --discount-color: #E53E3E;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg-card: rgba(255, 255, 255, 0.8);
+            --glass-blur: 10px;
+            --border-radius-sm: 6px;
+            --border-radius-md: 10px;
+            --border-radius-lg: 14px;
+            --shadow-color-light: rgba(150, 150, 150, 0.08);
+            --shadow-color-medium: rgba(60, 60, 90, 0.12);
+            --shadow-soft: 0 5px 20px 0 var(--shadow-color-light);
+            --shadow-lifted: 0 10px 35px 0 var(--shadow-color-medium);
+            --sidebar-width: 330px;
+            --content-gap: 30px;
+            --sticky-top-offset: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
+            background-attachment: fixed;
+            color: var(--secondary-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 50px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .page-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+
+        .product-header {
+            background-color: var(--white); padding: 30px 40px;
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+            border: 1px solid var(--light-gray); border-bottom: none;
+        }
+        .product-header h1 { font-size: 2.2em; margin-bottom: 6px; font-weight: 600; }
+        .product-header .tagline { font-size: 1.1em; color: var(--medium-gray); font-weight: 400; }
+
+        .product-video {
+            background-color: #eee; line-height: 0; position: relative;
+            border-left: 1px solid var(--light-gray); border-right: 1px solid var(--light-gray);
+            overflow: hidden;
+        }
+        .product-video video { display: block; width: 100%; height: auto; max-height: 60vh; background-color: #f0f0f0; }
+
+        .campaign-nav {
+            background-color: var(--white); border: 1px solid var(--light-gray); border-top: none;
+            padding: 0 40px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;
+            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+            margin-bottom: var(--content-gap); box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .campaign-nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+        .campaign-nav li { display: inline-block; }
+        .campaign-nav a {
+            display: inline-block; padding: 15px 20px; text-decoration: none; color: var(--medium-gray);
+            font-weight: 500; font-size: 0.9em; border-bottom: 3px solid transparent;
+            transition: color 0.25s ease, border-color 0.25s ease; margin-bottom: -1px; position: relative;
+        }
+        .campaign-nav a::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 0; height: 3px; background-color: var(--primary-color); border-radius: 1.5px; transition: width 0.3s ease; }
+        .campaign-nav a:hover { color: var(--secondary-color); }
+        .campaign-nav a.active { color: var(--primary-color); font-weight: 600; border-bottom-color: transparent; }
+        .campaign-nav a.active::after { width: 50%; }
+
+        .campaign-body { display: flex; flex-wrap: wrap; gap: var(--content-gap); }
+
+        .campaign-content {
+            flex-grow: 1; flex-basis: calc(100% - var(--sidebar-width) - var(--content-gap));
+            min-width: 320px; padding: 35px 40px; order: 1;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--border-radius-lg); border: 1px solid rgba(230, 230, 230, 0.5); box-shadow: var(--shadow-soft);
+            transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .campaign-content::before { /* Dynamic border effect */
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit; border: 1px solid transparent; pointer-events: none; z-index: 1;
+            transition: border-color 0.4s ease; --mouse-x: 50%; --mouse-y: 50%;
+            border-image: radial-gradient( circle 100px at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100% ) 1;
+        }
+
+        .campaign-content h2 {
+            font-size: 1.7em; margin-bottom: 20px; color: var(--primary-color); padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05); font-weight: 600;
+        }
+        .campaign-content p, .campaign-content li { margin-bottom: 1.5em; font-size: 0.95em; color: #333; font-weight: 400; }
+        .campaign-content ul { list-style-position: inside; padding-left: 5px; margin-bottom: 1.5em; }
+        .campaign-content li { margin-bottom: 0.7em; }
+        .campaign-content img { max-width: 100%; height: auto; border-radius: var(--border-radius-md); margin: 20px 0; box-shadow: var(--shadow-soft); }
+
+        .pricing-sidebar {
+            flex-grow: 0; flex-shrink: 0; flex-basis: var(--sidebar-width); order: 2;
+            position: sticky; top: var(--sticky-top-offset); align-self: flex-start;
+            max-height: calc(100vh - var(--sticky-top-offset) - 30px); overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--medium-gray) transparent;
+        }
+        .pricing-sidebar::-webkit-scrollbar { width: 5px; }
+        .pricing-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .pricing-sidebar::-webkit-scrollbar-thumb { background-color: rgba(136, 136, 136, 0.5); border-radius: 2.5px; }
+
+        .pricing-section {
+            padding: 30px; display: flex; flex-direction: column; gap: 20px;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--border-radius-lg); border: 1px solid rgba(230, 230, 230, 0.5); box-shadow: var(--shadow-soft);
+            position: relative; overflow: hidden;
+        }
+        .pricing-section::before { /* Dynamic border effect */
+             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+             border-radius: inherit; border: 1px solid transparent; pointer-events: none; z-index: 1;
+             transition: border-color 0.4s ease; --mouse-x: 50%; --mouse-y: 50%;
+             border-image: radial-gradient( circle 100px at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100% ) 1;
+        }
+
+        .full-price-info { text-align: center; margin-bottom: 10px; font-size: 1.05em; color: var(--medium-gray); font-weight: 500; }
+        .full-price-info strong { font-size: 1.5em; color: var(--secondary-color); font-weight: 600; display: block; margin-top: 3px; }
+
+        .option-card {
+            border: 1px solid rgba(235, 235, 235, 0.6); border-radius: var(--border-radius-md); padding: 25px; background: var(--glass-bg-card);
+            transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(100, 100, 100, 0.05); cursor: pointer; position: relative; overflow: hidden;
+        }
+         .option-card::before { /* Dynamic border effect */
+             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+             border-radius: inherit; border: 1px solid transparent; pointer-events: none; z-index: 1;
+             transition: border-color 0.4s ease; --mouse-x: 50%; --mouse-y: 50%;
+             border-image: radial-gradient( circle 100px at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100% ) 1;
+         }
+
+        .option-card:hover { border-color: var(--primary-color); transform: translateY(-3px); box-shadow: 0 6px 20px var(--primary-color-glow); }
+        .option-card:hover::before { border-image: none; border-color: transparent; }
+
+        .option-card h3 { font-size: 1.35em; margin-bottom: 10px; color: var(--primary-color); text-align: center; font-weight: 600; }
+        .option-card .price-display { font-size: 1.9em; font-weight: 600; color: var(--secondary-color); text-align: center; margin-bottom: 12px; }
+        .option-card .price-display .original-price { font-size: 0.55em; text-decoration: line-through; color: var(--medium-gray); display: block; margin-bottom: 4px; font-weight: 400; }
+        .option-card .description { font-size: 0.85em; color: #555; margin-bottom: 18px; flex-grow: 1; text-align: center; font-weight: 400; }
+        .option-card .description strong { color: var(--secondary-color); font-weight: 600; }
+        .option-card .discount-badge { display: inline-block; background-color: var(--discount-color); color: var(--white); padding: 4px 8px; border-radius: 5px; font-size: 0.7em; font-weight: 600; margin-left: 7px; vertical-align: middle; }
+
+        .btn {
+            display: block; width: 100%; padding: 12px 18px; background-color: var(--primary-color);
+            color: var(--white); border: none; border-radius: var(--border-radius-md);
+            font-size: 1.05em; font-weight: 600; text-align: center; cursor: pointer;
+            transition: all 0.25s ease; margin-top: auto;
+            box-shadow: 0 2px 8px rgba(5, 168, 98, 0.2);
+        }
+        .btn:hover { background-color: var(--primary-color-darker); box-shadow: 0 5px 15px var(--primary-color-glow); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0) scale(0.98); box-shadow: none; }
+
+        /* --- Comments Section --- */
+        #comments-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+        #comments-list {
+            margin-bottom: 30px;
+            max-height: 400px; /* Limit height */
+            overflow-y: auto; /* Make scrollable */
+             padding-right: 10px; /* Space for scrollbar */
+        }
+        .comment {
+            background-color: rgba(245, 245, 245, 0.5); /* Subtle background */
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 15px;
+            border: 1px solid rgba(220, 220, 220, 0.5);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .comment strong {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .comment p {
+            font-size: 0.95em;
+            margin-bottom: 0;
+             color: #444;
+        }
+        #comment-form label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            color: var(--secondary-color);
+        }
+        #comment-form input[type="email"],
+        #comment-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color-input);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 15px;
+            font-family: inherit;
+            font-size: 0.95em;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+         #comment-form input[type="email"]:focus,
+         #comment-form textarea:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 2px var(--primary-color-glow);
+         }
+        #comment-form textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        #comment-form button[type="submit"] {
+            /* Use existing button styles */
+        }
+
+        /* --- Responsiveness --- */
+        @media (max-width: 900px) {
+            .campaign-body { flex-direction: column; }
+            .pricing-sidebar { position: static; width: 100%; order: 1; max-height: none; overflow-y: visible; margin-bottom: var(--content-gap); }
+            .campaign-content { order: 2; }
+        }
+        @media (max-width: 600px) {
+            .product-header, .campaign-nav, .campaign-content, .pricing-section { padding: 20px; }
+            .product-header h1 { font-size: 1.8em; }
+            .campaign-content h2 { font-size: 1.5em; }
+            .campaign-nav a { padding: 14px 14px; font-size: 0.85em;}
+            .option-card .price-display { font-size: 1.8em; }
+            .btn { font-size: 1em; padding: 11px 16px; }
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center; margin: 50px auto 0; padding: 25px 20px; font-size: 0.85em;
+            color: var(--medium-gray); max-width: 1180px;
+            background: rgba(250, 250, 250, 0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border-radius: var(--border-radius-lg); border: 1px solid var(--border-color-glass);
+            box-shadow: var(--shadow-soft);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+
+        <header class="product-header">
+            <h1>Awesome Product Name</h1>
+            <p class="tagline">The revolutionary gadget you've been waiting for!</p>
+        </header>
+
+        <section class="product-video">
+             <video
+                poster="https://via.placeholder.com/1180x664/f7f8f9/aaaaaa?text=Clean+Video+Placeholder"
+                controls
+                preload="metadata"
+            >
+                <source src="111.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </section>
+
+        <nav class="campaign-nav">
+             <ul>
+                <li><a href="#story" class="active">Campaign</a></li>
+                <li><a href="#risks">Risks</a></li>
+                <li><a href="#comments-section">Comments</a></li>
+                 <li><a href="#faq">FAQ</a></li>
+                <li><a href="#updates">Updates</a></li>
+            </ul>
+        </nav>
+
+        <div class="campaign-body">
+
+            <main class="campaign-content">
+                <section id="story">
+                    <h2>The Story Behind Awesome Product</h2>
+                    <p>...</p> <!-- Shortened for brevity -->
+                    <img src="https://via.placeholder.com/700x400/e9ecef/333333?text=Minimal+Product+View" alt="Detailed view of Awesome Product">
+                    <p>...</p>
+                     <img src="https://via.placeholder.com/700x400/f8f9fa/333333?text=Clean+Usage+Example" alt="Awesome Product being used">
+                     <p>...</p>
+                </section>
+
+                 <section id="risks">
+                    <h2>Risks and Challenges</h2>
+                     <p>...</p>
+                     <p>Potential challenges include: <ul><li>...</li><li>...</li><li>...</li></ul>...</p>
+                </section>
+
+                 <!-- Comments Section -->
+                 <section id="comments-section">
+                     <h2>Comments</h2>
+                     <div id="comments-list">
+                         <!-- Comments will be loaded here by JS -->
+                     </div>
+                     <form id="comment-form">
+                         <h3>Leave a Comment</h3>
+                         <div>
+                             <label for="comment-email">Email (for verification):</label>
+                             <input type="email" id="comment-email" name="email" required>
+                         </div>
+                         <div>
+                             <label for="comment-text">Comment:</label>
+                             <textarea id="comment-text" name="comment" rows="4" required></textarea>
+                         </div>
+                         <button type="submit" class="btn">Submit Comment</button>
+                     </form>
+                 </section>
+
+                 <!-- Other Sections -->
+                 <section id="faq" style="min-height: 100px;"><h2>FAQ (Placeholder)</h2></section>
+                 <section id="updates" style="min-height: 100px;"><h2>Updates (Placeholder)</h2></section>
+
+            </main>
+
+            <aside class="pricing-sidebar">
+                <div class="pricing-section">
+                    <div class="full-price-info">
+                        Full Retail Price: <strong id="full-price-display">$0.00</strong>
+                    </div>
+
+                    <!-- Deposit Option -->
+                    <div class="option-card">
+                        <h3>Pay Deposit</h3>
+                        <div class="price-display" id="deposit-price-display">$0.00</div>
+                        <p class="description" id="deposit-description">
+                            Secure your Awesome Product now! Pay <strong>$XXX.XX</strong> today (30% of full price) and the remaining <strong>$YYY.YY</strong> upon shipment.
+                        </p>
+                        <button class="btn btn-deposit" id="deposit-button">Deposit Now</button>
+                    </div>
+
+                    <!-- Buy Now Option -->
+                    <div class="option-card">
+                        <h3>Buy Now & Save<span class="discount-badge">30% OFF</span></h3>
+                        <div class="price-display" id="buy-now-price-display">
+                            <span class="original-price" id="buy-now-original-price">$0.00</span>
+                            $0.00
+                        </div>
+                        <p class="description">
+                            Get the best deal! Pay the full discounted price today and save 30% off the retail value. Receive your Awesome Product as soon as it ships.
+                        </p>
+                        <button class="btn btn-buy" id="buy-now-button">Buy Now</button>
+                    </div>
+                     <!-- More Tiers -->
+                     <div class="option-card">
+                        <h3>Deluxe Bundle</h3>
+                         <div class="price-display">$450.00</div>
+                         <p class="description">Get the Awesome Product plus exclusive accessories! Includes [Accessory 1] and [Accessory 2]. Ultimate value.</p>
+                         <button class="btn btn-buy" data-amount="450">Pledge $450</button> <!-- Added data-amount -->
+                     </div>
+                </div>
+            </aside>
+
+        </div>
+
+    </div>
+
+    <footer>
+        Help bring creative projects to life.  |  © 2023 Your Company
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Configuration ---
+            const FULL_PRICE = 390;
+            const DISCOUNT_PERCENTAGE = 0.30;
+            const DEPOSIT_PERCENTAGE = 0.30;
+            const COMMENTS_STORAGE_KEY = 'awesomeProductComments_v1'; // Key for local storage
+            const SIMULATED_OTP = "123456"; // The "correct" OTP for this demo
+
+            // --- Calculations ---
+            const depositAmount = FULL_PRICE * DEPOSIT_PERCENTAGE;
+            const discountedPrice = FULL_PRICE * (1 - DISCOUNT_PERCENTAGE);
+            const remainingAmount = FULL_PRICE - depositAmount;
+
+            // --- Helper ---
+            function formatCurrency(amount) { return `$${amount.toFixed(2)}`; }
+
+            // --- DOM Elements ---
+            const fullPriceDisplay = document.getElementById('full-price-display');
+            const depositPriceDisplay = document.getElementById('deposit-price-display');
+            const depositDescription = document.getElementById('deposit-description');
+            const buyNowPriceDisplay = document.getElementById('buy-now-price-display');
+            const buyNowOriginalPrice = document.getElementById('buy-now-original-price');
+            const depositButton = document.getElementById('deposit-button');
+            const buyNowButton = document.getElementById('buy-now-button');
+            const commentsList = document.getElementById('comments-list');
+            const commentForm = document.getElementById('comment-form');
+            const commentEmailInput = document.getElementById('comment-email');
+            const commentTextInput = document.getElementById('comment-text');
+
+            // --- Update Prices ---
+            if (fullPriceDisplay) fullPriceDisplay.textContent = formatCurrency(FULL_PRICE);
+            if (depositPriceDisplay) depositPriceDisplay.textContent = formatCurrency(depositAmount);
+            if (depositDescription) depositDescription.innerHTML = `Secure your Awesome Product now! Pay <strong>${formatCurrency(depositAmount)}</strong> today (30% of full price) and the remaining <strong>${formatCurrency(remainingAmount)}</strong> upon shipment.`;
+            if (buyNowOriginalPrice) buyNowOriginalPrice.textContent = formatCurrency(FULL_PRICE);
+            if (buyNowPriceDisplay) {
+                 const priceNodes = buyNowPriceDisplay.childNodes;
+                for (let i = priceNodes.length - 1; i >= 0; i--) {
+                    if (priceNodes[i].nodeType === Node.TEXT_NODE) { priceNodes[i].nodeValue = ` ${formatCurrency(discountedPrice)}`; break; }
+                }
+            }
+
+            // --- Simulate Stripe Checkout ---
+            function simulateStripeCheckout(type, amount) {
+                console.log(`Simulating Stripe Checkout for ${type}, Amount: ${formatCurrency(amount)}`);
+                // In a real app, you would redirect to Stripe Checkout here
+                alert(`Initiating ${type === 'deposit' ? 'Deposit' : 'Full Purchase'} Payment for ${formatCurrency(amount)}.\n(This is a simulation - no real payment processed)`);
+            }
+
+            // --- Payment Button Actions ---
+            if (depositButton) {
+                depositButton.addEventListener('click', () => {
+                    simulateStripeCheckout('deposit', depositAmount);
+                    // Optional: Add confirmation message after simulation if needed
+                    // alert(`Thank you for your deposit...`) is now handled by simulateStripeCheckout
+                });
+            }
+            if (buyNowButton) {
+                 buyNowButton.addEventListener('click', () => {
+                    simulateStripeCheckout('buy_now', discountedPrice);
+                });
+            }
+             // Handle other pledge buttons generically
+            document.querySelectorAll('.pricing-section .btn-buy:not(#buy-now-button)').forEach(button => {
+                 button.addEventListener('click', () => {
+                     const amount = parseFloat(button.dataset.amount || '0'); // Get amount from data attribute
+                     if(amount > 0) {
+                        simulateStripeCheckout('pledge', amount);
+                     } else {
+                         alert('Could not determine pledge amount for this reward.');
+                     }
+                 });
+             });
+
+
+            // --- Comments Functionality ---
+            function loadComments() {
+                if (!commentsList) return;
+                commentsList.innerHTML = ''; // Clear existing list
+                const storedComments = localStorage.getItem(COMMENTS_STORAGE_KEY);
+                const comments = storedComments ? JSON.parse(storedComments) : [];
+                if (comments.length === 0) {
+                    commentsList.innerHTML = '<p style="color: var(--medium-gray); text-align: center;">No comments yet. Be the first!</p>';
+                } else {
+                     comments.forEach(displayComment);
+                }
+            }
+
+            function displayComment(commentData) {
+                 if (!commentsList) return;
+
+                 // Remove placeholder if it exists
+                const placeholder = commentsList.querySelector('p');
+                if (placeholder && placeholder.textContent.includes('No comments yet')) {
+                    placeholder.remove();
+                }
+
+                 const commentDiv = document.createElement('div');
+                 commentDiv.className = 'comment';
+
+                 // **IMPORTANT**: In a real app, NEVER display the full email.
+                 // Mask it (e.g., show first few chars and domain: t***@example.com)
+                 // For this demo, we show it but add a warning.
+                 const emailStrong = document.createElement('strong');
+                 emailStrong.textContent = commentData.email + " (Email shown for demo)"; // Demo only!
+
+                 const commentP = document.createElement('p');
+                 commentP.textContent = commentData.text;
+
+                 commentDiv.appendChild(emailStrong);
+                 commentDiv.appendChild(commentP);
+
+                 commentsList.appendChild(commentDiv); // Add to the top for newest first: commentsList.prepend(commentDiv);
+            }
+
+            function addComment(email, text) {
+                 const storedComments = localStorage.getItem(COMMENTS_STORAGE_KEY);
+                 const comments = storedComments ? JSON.parse(storedComments) : [];
+                 const newComment = { email, text, timestamp: new Date().toISOString() }; // Add timestamp
+                 comments.push(newComment);
+                 localStorage.setItem(COMMENTS_STORAGE_KEY, JSON.stringify(comments));
+                 displayComment(newComment);
+            }
+
+            if (commentForm) {
+                commentForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const email = commentEmailInput.value.trim();
+                    const text = commentTextInput.value.trim();
+
+                    if (!email || !text) {
+                        alert('Please enter both email and comment.');
+                        return;
+                    }
+
+                    // ** SIMULATED OTP FLOW **
+                    console.log(`Simulating OTP request for: ${email}`);
+                    alert(`(Simulation) An OTP would be sent to ${email}. Please check your inbox.`);
+
+                    const enteredOtp = prompt(`Please enter the 6-digit OTP sent to ${email}.\n(For this demo, use: ${SIMULATED_OTP})`);
+
+                    if (enteredOtp === null) {
+                        alert('OTP verification cancelled.');
+                        return; // User cancelled the prompt
+                    }
+
+                    if (enteredOtp === SIMULATED_OTP) {
+                        console.log('OTP Verified (Simulated)');
+                        addComment(email, text);
+                        commentEmailInput.value = ''; // Clear form
+                        commentTextInput.value = '';
+                        alert('Comment added successfully!');
+                    } else {
+                        alert('Incorrect OTP entered. Please try again.');
+                    }
+                    // ** END SIMULATED OTP FLOW **
+                });
+            }
+
+             // Initial load of comments
+             loadComments();
+
+
+            // --- Nav Link Active State + Smooth Scroll ---
+            const navLinks = document.querySelectorAll('.campaign-nav a');
+            const navBar = document.querySelector('.campaign-nav');
+            const scrollOffset = (navBar ? navBar.offsetHeight : 0) + 20;
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navLinks.forEach(el => el.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const targetId = e.target.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        const elementPosition = targetSection.getBoundingClientRect().top + window.pageYOffset;
+                        const offsetPosition = elementPosition - scrollOffset;
+                        window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                    }
+                });
+            });
+
+            // --- Dynamic Border Effect Script ---
+            const glassElements = document.querySelectorAll('.campaign-content, .pricing-section, .option-card');
+            glassElements.forEach(el => {
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    el.style.setProperty('--mouse-x', `${x}px`);
+                    el.style.setProperty('--mouse-y', `${y}px`);
+                });
+                el.addEventListener('mouseleave', () => {
+                     el.style.setProperty('--mouse-x', `-100px`);
+                     el.style.setProperty('--mouse-y', `-100px`);
+                });
+            });
+
+            // --- Card Click Simulation ---
+            const optionCards = document.querySelectorAll('.option-card');
+            optionCards.forEach(card => {
+                 card.addEventListener('click', (e) => {
+                     if (e.target.tagName.toLowerCase() === 'button') return;
+                     const button = card.querySelector('.btn');
+                     if (button) button.click();
+                 });
+             });
+
+        });
+    </script>
+
+</body>
+</html>
