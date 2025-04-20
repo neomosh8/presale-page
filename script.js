@@ -332,6 +332,249 @@ function updateFormValidation() {
   }
 }
 
+function updateOTPModals() {
+  // Purchase OTP Modal
+  const purchaseOTPModal = document.getElementById('purchase-otp-modal');
+  if (purchaseOTPModal) {
+    // Remove the radio buttons
+    const radioContainer = purchaseOTPModal.querySelector('input[name="purchase-contact-method"]').closest('label').parentNode;
+    const emailRadio = purchaseOTPModal.querySelector('input[value="email"]');
+    
+    // Set default contact method to email
+    emailRadio.checked = true;
+    
+    // Create the container for the new layout
+    const newContainer = document.createElement('div');
+    newContainer.innerHTML = `
+      <div>
+        <input id="purchase-contact-value" type="email" placeholder="Enter email address" required>
+        <button id="purchase-send-otp-btn">Send Verification Code</button>
+        <a class="contact-toggle" id="purchase-toggle-contact">Use phone number instead</a>
+      </div>
+      <div id="purchase-otp-section" style="display:none">
+        <input id="purchase-otp-code" placeholder="Enter verification code" required>
+        <div class="otp-actions">
+          <button id="purchase-verify-otp-btn">Verify</button>
+          <button id="purchase-resend-otp-btn" class="otp-resend">Resend Code</button>
+        </div>
+      </div>
+    `;
+    
+    // Replace content
+    radioContainer.parentNode.replaceChild(newContainer, radioContainer);
+    
+    // Update event handlers
+    const toggleContact = document.getElementById('purchase-toggle-contact');
+    const contactInput = document.getElementById('purchase-contact-value');
+    
+    toggleContact.addEventListener('click', () => {
+      const isEmail = contactInput.type === 'email';
+      
+      if (isEmail) {
+        // Switch to phone
+        contactInput.type = 'tel';
+        contactInput.placeholder = 'Enter phone number';
+        contactInput.pattern = '[0-9+\\-\\s()]{6,20}';
+        toggleContact.textContent = 'Use email instead';
+        document.querySelector('input[value="sms"]').checked = true;
+      } else {
+        // Switch to email
+        contactInput.type = 'email';
+        contactInput.placeholder = 'Enter email address';
+        contactInput.pattern = '';
+        toggleContact.textContent = 'Use phone number instead';
+        document.querySelector('input[value="email"]').checked = true;
+      }
+    });
+    
+    // Update resend button functionality
+    const resendBtn = document.getElementById('purchase-resend-otp-btn');
+    resendBtn.addEventListener('click', async () => {
+      const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
+      const val = document.getElementById('purchase-contact-value').value.trim();
+      
+      if (!val) {
+        alert('Please enter your contact information.');
+        return;
+      }
+      
+      if (method === 'email' && !val.includes('@')) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending...';
+      
+      if (await sendOtp(method, val)) {
+        resendBtn.textContent = 'Resend Code';
+        resendBtn.disabled = false;
+      } else {
+        alert('Failed to send verification code. Please try again.');
+        resendBtn.textContent = 'Resend Code';
+        resendBtn.disabled = false;
+      }
+    });
+  }
+  
+  // Login OTP Modal - Same pattern
+  const loginOTPModal = document.getElementById('login-modal');
+  if (loginOTPModal) {
+    // Remove the radio buttons
+    const radioContainer = loginOTPModal.querySelector('input[name="login-contact-method"]').closest('label').parentNode;
+    const emailRadio = loginOTPModal.querySelector('input[value="email"]');
+    
+    // Set default contact method to email
+    emailRadio.checked = true;
+    
+    // Create the container for the new layout
+    const newContainer = document.createElement('div');
+    newContainer.innerHTML = `
+      <div>
+        <input id="login-contact-value" type="email" placeholder="Enter email address" required>
+        <button id="login-send-otp-btn">Send Verification Code</button>
+        <a class="contact-toggle" id="login-toggle-contact">Use phone number instead</a>
+      </div>
+      <div id="login-otp-section" style="display:none">
+        <input id="login-otp-code" placeholder="Enter verification code" required>
+        <div class="otp-actions">
+          <button id="login-verify-otp-btn">Verify</button>
+          <button id="login-resend-otp-btn" class="otp-resend">Resend Code</button>
+        </div>
+      </div>
+    `;
+    
+    // Replace content
+    radioContainer.parentNode.replaceChild(newContainer, radioContainer);
+    
+    // Update event handlers
+    const toggleContact = document.getElementById('login-toggle-contact');
+    const contactInput = document.getElementById('login-contact-value');
+    
+    toggleContact.addEventListener('click', () => {
+      const isEmail = contactInput.type === 'email';
+      
+      if (isEmail) {
+        // Switch to phone
+        contactInput.type = 'tel';
+        contactInput.placeholder = 'Enter phone number';
+        contactInput.pattern = '[0-9+\\-\\s()]{6,20}';
+        toggleContact.textContent = 'Use email instead';
+        document.querySelector('input[name="login-contact-method"][value="sms"]').checked = true;
+      } else {
+        // Switch to email
+        contactInput.type = 'email';
+        contactInput.placeholder = 'Enter email address';
+        contactInput.pattern = '';
+        toggleContact.textContent = 'Use phone number instead';
+        document.querySelector('input[name="login-contact-method"][value="email"]').checked = true;
+      }
+    });
+    
+    // Update resend button functionality
+    const resendBtn = document.getElementById('login-resend-otp-btn');
+    resendBtn.addEventListener('click', async () => {
+      const method = document.querySelector('input[name="login-contact-method"]:checked').value;
+      const val = document.getElementById('login-contact-value').value.trim();
+      
+      if (!val) {
+        alert('Please enter your contact information.');
+        return;
+      }
+      
+      if (method === 'email' && !val.includes('@')) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending...';
+      
+      if (await sendOtp(method, val)) {
+        resendBtn.textContent = 'Resend Code';
+        resendBtn.disabled = false;
+      } else {
+        alert('Failed to send verification code. Please try again.');
+        resendBtn.textContent = 'Resend Code';
+        resendBtn.disabled = false;
+      }
+    });
+  }
+  
+  // Comment OTP Modal
+  const commentOTPModal = document.getElementById('comment-otp-modal');
+  if (commentOTPModal) {
+    const otpInput = commentOTPModal.querySelector('#comment-otp-code');
+    const verifyBtn = commentOTPModal.querySelector('#comment-verify-otp-btn');
+    
+    // Add resend button
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'otp-actions';
+    
+    // Move verify button to actions div
+    otpInput.parentNode.insertBefore(actionsDiv, verifyBtn);
+    actionsDiv.appendChild(verifyBtn);
+    
+    // Create resend button
+    const resendBtn = document.createElement('button');
+    resendBtn.id = 'comment-resend-otp-btn';
+    resendBtn.className = 'otp-resend';
+    resendBtn.textContent = 'Resend Code';
+    actionsDiv.appendChild(resendBtn);
+    
+    // Add event listener for resend
+    resendBtn.addEventListener('click', async () => {
+      if (!pendingComment || !pendingComment.contactValue) {
+        alert('Something went wrong. Please try again.');
+        return;
+      }
+      
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending...';
+      
+      try {
+        const otpSent = await sendOtp('email', pendingComment.contactValue);
+        if (otpSent) {
+          resendBtn.textContent = 'Resend Code';
+          resendBtn.disabled = false;
+        } else {
+          alert('Failed to send verification code. Please try again.');
+          resendBtn.textContent = 'Resend Code';
+          resendBtn.disabled = false;
+        }
+      } catch (error) {
+        console.error('Error sending OTP:', error);
+        alert('Failed to send verification code. Please try again.');
+        resendBtn.textContent = 'Resend Code';
+        resendBtn.disabled = false;
+      }
+    });
+  }
+}
+
+// Function to update profile modal
+function updateProfileModal() {
+  const profileModal = document.getElementById('profile-modal');
+  if (profileModal) {
+    const closeBtn = document.getElementById('profile-close-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    // Create actions container
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'profile-actions';
+    
+    // Move buttons to container
+    if (closeBtn && logoutBtn) {
+      closeBtn.parentNode.insertBefore(actionsDiv, closeBtn);
+      actionsDiv.appendChild(closeBtn);
+      actionsDiv.appendChild(logoutBtn);
+      
+      // Update button text
+      closeBtn.textContent = 'Close';
+    }
+  }
+}
+
 /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
   /* ----- Create Order Success Modal ----- */
@@ -354,7 +597,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
     document.body.appendChild(orderSuccessModal);
   }
-
+  updateOTPModals();
+  updateProfileModal();
   /* ----- Populate prices ----- */
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
   document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);

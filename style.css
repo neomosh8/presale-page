@@ -833,6 +833,72 @@ footer {
     display: none;
 }
 
+
+/* OTP Modal Styles - New Design */
+.contact-toggle {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    color: var(--medium-gray);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9em;
+  }
+  
+  .contact-toggle:hover {
+    color: var(--dark-gray);
+  }
+  
+  /* OTP Verification Section - New Design */
+  .otp-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .otp-actions button {
+    flex: 1;
+  }
+  
+  .otp-resend {
+    background: #E2E8F0 !important;
+    color: var(--dark-gray) !important;
+    box-shadow: none !important;
+  }
+  
+  .otp-resend:hover {
+    background: #CBD5E1 !important;
+    transform: translateY(-2px);
+  }
+  
+  /* Profile Modal - New Design */
+  .profile-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+  }
+  
+  .profile-actions button {
+    flex: 1;
+    margin-top: 0 !important;
+  }
+  
+  #profile-close-btn {
+    background-color: var(--primary-color);
+  }
+  
+  #logout-btn {
+    background-color: transparent;
+    color: #EF4444;
+    border: 1px solid #EF4444;
+    box-shadow: none;
+  }
+  
+  #logout-btn:hover {
+    background-color: rgba(239, 68, 68, 0.05);
+    transform: translateY(-2px);
+  }
+
 /* ---------------------------------------------------------------------------
    Responsiveness
 --------------------------------------------------------------------------- */
