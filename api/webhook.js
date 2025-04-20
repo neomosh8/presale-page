@@ -40,25 +40,45 @@ export default async function handler(req, res) {
       const user = JSON.parse(userStr);
       const order = JSON.parse(orderStr);
 
-      const details = [
+      // Plain text details for SMS
+      const plainTextDetails = [
         `Thank you for your purchase!`,
         `Order ID: ${order.id}`,
         `Amount: $${order.amount.toFixed(2)}`,
         `Shipping to: ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.country}`
       ].join('\n');
 
-      if (user.contactMethod === 'sms') {
-        await twClient.messages.create({
-          body: details,
-          to: user.contactValue,
-          from: process.env.TWILIO_PHONE_NUMBER
-        });
-      } else {
+      if (user.contactMethod === 'email') {
+        // Send email using dynamic template
         await sgMail.send({
           to: user.contactValue,
           from: process.env.SENDGRID_FROM_EMAIL,
-          subject: 'Your Order Details',
-          text: details
+          // Replace with your actual template ID from SendGrid
+          template_id: process.env.SENDGRID_ORDER_TEMPLATE_ID,
+          dynamic_template_data: {
+            order_id: order.id,
+            amount: order.amount.toFixed(2),
+            date: new Date().toLocaleString(),
+            customer_name: order.shipping.name || '',
+            address_line1: order.shipping.address || '',
+            address_city: order.shipping.city || '',
+            address_country: order.shipping.country || '',
+            phone: order.shipping.phone || '',
+            items: [
+              // You can replace this with actual items if you track them
+              {
+                name: "Awesome Product",
+                price: `$${order.amount.toFixed(2)}`,
+                image_url: "https://via.placeholder.com/100x100" // Placeholder, replace with your actual product image
+              }
+            ]
+          }
+        });
+      } else {
+        await twClient.messages.create({
+          body: plainTextDetails,
+          to: user.contactValue,
+          from: process.env.TWILIO_PHONE_NUMBER
         });
       }
     } catch (error) {

@@ -247,6 +247,27 @@ function updateFormValidation() {
 
 /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
+  /* ----- Create Order Success Modal ----- */
+  // Add the order success modal to the DOM if it doesn't exist
+  if (!document.getElementById('order-success-modal')) {
+    const orderSuccessModal = document.createElement('div');
+    orderSuccessModal.id = 'order-success-modal';
+    orderSuccessModal.className = 'modal hidden';
+    orderSuccessModal.innerHTML = `
+      <div class="modal-content">
+        <span class="close-modal" data-modal="order-success-modal">&times;</span>
+        <h3>Order Confirmation</h3>
+        <div id="order-success-details">
+          <p><strong>Thank you for your purchase!</strong></p>
+          <p>Your order has been confirmed. You will receive a confirmation email shortly.</p>
+          <div id="order-info-display"></div>
+        </div>
+        <button id="order-success-close-btn">Close</button>
+      </div>
+    `;
+    document.body.appendChild(orderSuccessModal);
+  }
+
   /* ----- Populate prices ----- */
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
   document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
@@ -259,7 +280,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ----- Check for stored authentication ----- */
   await checkStoredAuth();
   updateFormValidation(); 
-
   
   /* ----- Setup close buttons for all modals ----- */
   document.querySelectorAll('.close-modal').forEach(closeBtn => {
@@ -281,6 +301,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Close profile modal with button
   document.getElementById('profile-close-btn').addEventListener('click', () => {
     closeModal('profile-modal');
+  });
+
+  // Close order success modal with button
+  document.body.addEventListener('click', (e) => {
+    if (e.target.id === 'order-success-close-btn') {
+      closeModal('order-success-modal');
+    }
   });
 
   /* ----- Purchase flow ----- */
@@ -423,6 +450,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     
     try {
+      // Store order info in localStorage for retrieval after checkout
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        amount: currentPurchase.amount,
+        contactMethod: currentPurchase.contactMethod,
+        contactValue: currentPurchase.contactValue,
+        shipping: shipping,
+        id: `order_${Date.now()}`,
+        timestamp: new Date().toISOString()
+      }));
+      
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -520,266 +557,294 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.textContent = 'Send OTP';
       btn.disabled   = false;
     }
-  });  // ← now the async callback and addEventListener are properly closed
+  });
   
+  document.getElementById('login-verify-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="login-contact-method"]:checked').value;
+    const val = document.getElementById('login-contact-value').value.trim();
+    const code = document.getElementById('login-otp-code').value.trim();
     
-    document.getElementById('login-verify-otp-btn').addEventListener('click', async () => {
-      const method = document.querySelector('input[name="login-contact-method"]:checked').value;
-      const val = document.getElementById('login-contact-value').value.trim();
-      const code = document.getElementById('login-otp-code').value.trim();
+    if (!code) {
+      alert('Please enter the OTP code.');
+      return;
+    }
+    
+    document.getElementById('login-verify-otp-btn').disabled = true;
+    document.getElementById('login-verify-otp-btn').textContent = 'Verifying...';
+    
+    try {
+      if (await verifyOtp(method, val, code)) {
+        closeModal('login-modal');
+        
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({contactMethod: method, contactValue: val})
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Server responded with status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        // Save auth token in localStorage
+        authToken = data.token;
+        localStorage.setItem('authToken', authToken);
+        
+        // Update current user
+        currentUser = data.user;
+        document.getElementById('login-button').textContent = 'My Profile';
+        document.getElementById('comment-form').classList.add('user-logged-in');
+        updateFormValidation(); 
+
+        showProfileModal(data.user, data.orders);
+      } else {
+        alert('Incorrect OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
+    } finally {
+      document.getElementById('login-verify-otp-btn').disabled = false;
+      document.getElementById('login-verify-otp-btn').textContent = 'Verify & Load Profile';
+    }
+  });
+  
+  /* ----- Comments with OTP ----- */
+  document.getElementById('comment-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    
+    // Get comment text first
+    const text = document.getElementById('comment-text').value.trim();
+    
+    if (!text) {
+      alert('Please enter a comment.');
+      return;
+    }
+    
+    // If user is already logged in, use their info
+    if (currentUser) {
+      try {
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            contactMethod: currentUser.contactMethod,
+            contactValue: currentUser.contactValue,
+            text
+          })
+        });
+        
+        if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
+        
+        const newComment = await res.json();
+        
+        // Add comment to the list
+        displayComment(newComment);
+        
+        // Clear form
+        document.getElementById('comment-text').value = '';
+        
+        alert('Comment added successfully!');
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        alert('Failed to add comment. Please try again.');
+      }
+    } else {
+      // For non-logged in users, use email and OTP verification
+      const emailField = document.getElementById('comment-email');
+      const email = emailField.value.trim();
       
-      if (!code) {
-        alert('Please enter the OTP code.');
+      if (!email) {
+        alert('Please enter your email.');
         return;
       }
       
-      document.getElementById('login-verify-otp-btn').disabled = true;
-      document.getElementById('login-verify-otp-btn').textContent = 'Verifying...';
+      // Simple email validation
+      if (!email.includes('@')) {
+        alert('Please enter a valid email address.');
+        return;
+      }
       
+      // Store comment data for later use
+      pendingComment = {
+        contactMethod: 'email',
+        contactValue: email,
+        text
+      };
+      
+      // Send OTP
       try {
-        if (await verifyOtp(method, val, code)) {
-          closeModal('login-modal');
-          
-          const res = await fetch('/api/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({contactMethod: method, contactValue: val})
-          });
-          
-          if (!res.ok) {
-            throw new Error(`Server responded with status: ${res.status}`);
-          }
-          
-          const data = await res.json();
-          
-          // Save auth token in localStorage
-          authToken = data.token;
-          localStorage.setItem('authToken', authToken);
-          
-          // Update current user
-          currentUser = data.user;
-          document.getElementById('login-button').textContent = 'My Profile';
-          document.getElementById('comment-form').classList.add('user-logged-in');
-          updateFormValidation(); 
-
-          showProfileModal(data.user, data.orders);
+        const otpSent = await sendOtp('email', email);
+        if (otpSent) {
+          // Open comment OTP modal
+          openModal('comment-otp-modal');
         } else {
-          alert('Incorrect OTP. Please try again.');
+          alert('Failed to send verification code. Please try again.');
         }
       } catch (error) {
-        console.error('Login error:', error);
-        alert('An error occurred during login. Please try again.');
-      } finally {
-        document.getElementById('login-verify-otp-btn').disabled = false;
-        document.getElementById('login-verify-otp-btn').textContent = 'Verify & Load Profile';
-      }
-    });
-  
-/* ----- Comments with OTP ----- */
-document.getElementById('comment-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  
-  // Get comment text first
-  const text = document.getElementById('comment-text').value.trim();
-  
-  if (!text) {
-    alert('Please enter a comment.');
-    return;
-  }
-  
-  // If user is already logged in, use their info
-  if (currentUser) {
-    try {
-      const res = await fetch('/api/comments', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          contactMethod: currentUser.contactMethod,
-          contactValue: currentUser.contactValue,
-          text
-        })
-      });
-      
-      if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
-      
-      const newComment = await res.json();
-      
-      // Add comment to the list
-      displayComment(newComment);
-      
-      // Clear form
-      document.getElementById('comment-text').value = '';
-      
-      alert('Comment added successfully!');
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      alert('Failed to add comment. Please try again.');
-    }
-  } else {
-    // For non-logged in users, use email and OTP verification
-    const emailField = document.getElementById('comment-email');
-    const email = emailField.value.trim();
-    
-    if (!email) {
-      alert('Please enter your email.');
-      return;
-    }
-    
-    // Simple email validation
-    if (!email.includes('@')) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-    
-    // Store comment data for later use
-    pendingComment = {
-      contactMethod: 'email',
-      contactValue: email,
-      text
-    };
-    
-    // Send OTP
-    try {
-      const otpSent = await sendOtp('email', email);
-      if (otpSent) {
-        // Open comment OTP modal
-        openModal('comment-otp-modal');
-      } else {
+        console.error('Error sending OTP:', error);
         alert('Failed to send verification code. Please try again.');
       }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      alert('Failed to send verification code. Please try again.');
-    }
-  }
-});
-
-// Handle comment verification
-document.getElementById('comment-verify-otp-btn').addEventListener('click', async () => {
-  const code = document.getElementById('comment-otp-code').value.trim();
-  
-  if (!code) {
-    alert('Please enter the verification code.');
-    return;
-  }
-  
-  document.getElementById('comment-verify-otp-btn').disabled = true;
-  document.getElementById('comment-verify-otp-btn').textContent = 'Verifying...';
-  
-  try {
-    if (await verifyOtp('email', pendingComment.contactValue, code)) {
-      // Post comment to API
-      const res = await fetch('/api/comments', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(pendingComment)
-      });
-      
-      if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
-      
-      const newComment = await res.json();
-      
-      // Add to the comments list
-      displayComment(newComment);
-      
-      // Clear form and close modal
-      document.getElementById('comment-email').value = '';
-      document.getElementById('comment-text').value = '';
-      closeModal('comment-otp-modal');
-      
-      alert('Comment added successfully!');
-    } else {
-      alert('Incorrect verification code. Please try again.');
-    }
-  } catch (error) {
-    console.error('Error adding comment:', error);
-    alert('Error saving comment. Please try again.');
-  } finally {
-    document.getElementById('comment-verify-otp-btn').disabled = false;
-    document.getElementById('comment-verify-otp-btn').textContent = 'Verify OTP';
-  }
-});
-    
-    // Load existing comments
-    loadComments();
-  
-    /* ----- Campaign nav smooth scroll ----- */
-    const navLinks = document.querySelectorAll('.campaign-nav a');
-    const navBar = document.querySelector('.campaign-nav');
-    const scrollOffset = (navBar ? navBar.offsetHeight : 0) + 20;
-    
-    navLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        
-        navLinks.forEach(el => el.classList.remove('active'));
-        e.target.classList.add('active');
-        
-        const targetId = e.target.getAttribute('href');
-        const target = document.querySelector(targetId);
-        
-        if (target) {
-          const pos = target.getBoundingClientRect().top + window.pageYOffset;
-          const offsetPos = pos - scrollOffset;
-          window.scrollTo({top: offsetPos, behavior: 'smooth'});
-        }
-      });
-    });
-  
-    /* ----- Dynamic border effect ----- */
-    document.querySelectorAll('.campaign-content, .pricing-section, .option-card').forEach(el => {
-      el.addEventListener('mousemove', e => {
-        const r = el.getBoundingClientRect();
-        const x = e.clientX - r.left, y = e.clientY - r.top;
-        el.style.setProperty('--mouse-x', `${x}px`);
-        el.style.setProperty('--mouse-y', `${y}px`);
-      });
-      
-      el.addEventListener('mouseleave', () => {
-        el.style.setProperty('--mouse-x', '-100px');
-        el.style.setProperty('--mouse-y', '-100px');
-      });
-    });
-  
-    /* ----- Card click = button click ----- */
-    document.querySelectorAll('.option-card').forEach(card => {
-      card.addEventListener('click', e => {
-        // Prevent triggering button click if already clicking the button
-        if (e.target.tagName.toLowerCase() === 'button' || 
-            e.target.closest('button')) return;
-        
-        const btn = card.querySelector('.btn');
-        if (btn) btn.click();
-      });
-    });
-  
-    /* ----- Add keyboard accessibility -----*/
-    // Make modals closable with Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.modal:not(.hidden)').forEach(modal => {
-          closeModal(modal.id);
-        });
-      }
-    });
-  
-    // Make option cards accessible with keyboard
-    document.querySelectorAll('.option-card').forEach(card => {
-      card.setAttribute('tabindex', '0');
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          const btn = card.querySelector('.btn');
-          if (btn) btn.click();
-        }
-      });
-    });
-  
-    /* ----- Handle URL parameters for successful checkout ----- */
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
-      alert('Thank you for your purchase! You will receive a confirmation shortly.');
-    } else if (urlParams.get('canceled') === 'true') {
-      alert('Your order was canceled. If you need assistance, please contact us.');
     }
   });
+
+  // Handle comment verification
+  document.getElementById('comment-verify-otp-btn').addEventListener('click', async () => {
+    const code = document.getElementById('comment-otp-code').value.trim();
+    
+    if (!code) {
+      alert('Please enter the verification code.');
+      return;
+    }
+    
+    document.getElementById('comment-verify-otp-btn').disabled = true;
+    document.getElementById('comment-verify-otp-btn').textContent = 'Verifying...';
+    
+    try {
+      if (await verifyOtp('email', pendingComment.contactValue, code)) {
+        // Post comment to API
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(pendingComment)
+        });
+        
+        if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
+        
+        const newComment = await res.json();
+        
+        // Add to the comments list
+        displayComment(newComment);
+        
+        // Clear form and close modal
+        document.getElementById('comment-email').value = '';
+        document.getElementById('comment-text').value = '';
+        closeModal('comment-otp-modal');
+        
+        alert('Comment added successfully!');
+      } else {
+        alert('Incorrect verification code. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      alert('Error saving comment. Please try again.');
+    } finally {
+      document.getElementById('comment-verify-otp-btn').disabled = false;
+      document.getElementById('comment-verify-otp-btn').textContent = 'Verify OTP';
+    }
+  });
+    
+  // Load existing comments
+  loadComments();
+  
+  /* ----- Campaign nav smooth scroll ----- */
+  const navLinks = document.querySelectorAll('.campaign-nav a');
+  const navBar = document.querySelector('.campaign-nav');
+  const scrollOffset = (navBar ? navBar.offsetHeight : 0) + 20;
+  
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      
+      navLinks.forEach(el => el.classList.remove('active'));
+      e.target.classList.add('active');
+      
+      const targetId = e.target.getAttribute('href');
+      const target = document.querySelector(targetId);
+      
+      if (target) {
+        const pos = target.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPos = pos - scrollOffset;
+        window.scrollTo({top: offsetPos, behavior: 'smooth'});
+      }
+    });
+  });
+  
+  /* ----- Dynamic border effect ----- */
+  document.querySelectorAll('.campaign-content, .pricing-section, .option-card').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      el.style.setProperty('--mouse-x', `${x}px`);
+      el.style.setProperty('--mouse-y', `${y}px`);
+    });
+    
+    el.addEventListener('mouseleave', () => {
+      el.style.setProperty('--mouse-x', '-100px');
+      el.style.setProperty('--mouse-y', '-100px');
+    });
+  });
+  
+  /* ----- Card click = button click ----- */
+  document.querySelectorAll('.option-card').forEach(card => {
+    card.addEventListener('click', e => {
+      // Prevent triggering button click if already clicking the button
+      if (e.target.tagName.toLowerCase() === 'button' || 
+          e.target.closest('button')) return;
+      
+      const btn = card.querySelector('.btn');
+      if (btn) btn.click();
+    });
+  });
+  
+  /* ----- Add keyboard accessibility -----*/
+  // Make modals closable with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal:not(.hidden)').forEach(modal => {
+        closeModal(modal.id);
+      });
+    }
+  });
+  
+  // Make option cards accessible with keyboard
+  document.querySelectorAll('.option-card').forEach(card => {
+    card.setAttribute('tabindex', '0');
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const btn = card.querySelector('.btn');
+        if (btn) btn.click();
+      }
+    });
+  });
+  
+  /* ----- Handle URL parameters for successful checkout ----- */
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success') === 'true') {
+    // Get stored order information
+    const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
+    
+    // Display order information in the modal
+    if (pendingOrder.amount) {
+      const orderInfoHtml = `
+        <div class="order-success-info" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
+          <p><strong>Order ID:</strong> <span id="success-order-id">${pendingOrder.id || 'order_' + Date.now()}</span></p>
+          <p><strong>Amount Paid:</strong> $${pendingOrder.amount.toFixed(2)}</p>
+          <p><strong>Contact:</strong> ${pendingOrder.contactValue}</p>
+          <p><strong>Shipping Address:</strong> ${pendingOrder.shipping.address}, ${pendingOrder.shipping.city}, ${pendingOrder.shipping.country}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+      `;
+      
+      document.getElementById('order-info-display').innerHTML = orderInfoHtml;
+    }
+    
+    // Clear pending order from localStorage
+    localStorage.removeItem('pendingOrder');
+    
+    // Show success modal instead of alert
+    openModal('order-success-modal');
+    
+    // Add event listener for the close button if it doesn't exist yet
+    if (!document.getElementById('order-success-close-btn').onclick) {
+      document.getElementById('order-success-close-btn').addEventListener('click', () => {
+        closeModal('order-success-modal');
+      });
+    }
+  } else if (urlParams.get('canceled') === 'true') {
+    alert('Your order was canceled. If you need assistance, please contact us.');
+  }
+});
