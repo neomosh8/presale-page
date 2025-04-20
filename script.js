@@ -174,6 +174,7 @@ async function showProfileModal(user, orders) {
     currentUser = null;
     document.getElementById('login-button').textContent = 'Login';
     document.getElementById('comment-form').classList.remove('user-logged-in');
+    updateFormValidation(); 
     closeModal('profile-modal');
   });
   
@@ -214,7 +215,11 @@ async function verifyOtp(method, value, code) {
     const res = await fetch('/api/verify-otp', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({contactMethod: method, contactValue: value, code})
+      body: JSON.stringify({
+        contactMethod: method, 
+        contactValue: value, 
+        code
+      })
     });
     
     if (!res.ok) {
@@ -226,6 +231,17 @@ async function verifyOtp(method, value, code) {
   } catch (error) {
     console.error('Error verifying OTP:', error);
     return false;
+  }
+}
+
+function updateFormValidation() {
+  const emailField = document.getElementById('comment-email');
+  if (currentUser) {
+    // If logged in, remove required attribute
+    emailField.removeAttribute('required');
+  } else {
+    // If not logged in, add required attribute
+    emailField.setAttribute('required', '');
   }
 }
 
@@ -242,6 +258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ----- Check for stored authentication ----- */
   await checkStoredAuth();
+  updateFormValidation(); 
+
   
   /* ----- Setup close buttons for all modals ----- */
   document.querySelectorAll('.close-modal').forEach(closeBtn => {
@@ -355,7 +373,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       currentUser = { contactMethod: method, contactValue: val };
       document.getElementById('login-button').textContent = 'My Profile';
       document.getElementById('comment-form').classList.add('user-logged-in');
-      
+      updateFormValidation(); 
+
       // Generate auth token
       try {
         const tokenRes = await fetch('/api/auth-token', {
@@ -541,7 +560,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           currentUser = data.user;
           document.getElementById('login-button').textContent = 'My Profile';
           document.getElementById('comment-form').classList.add('user-logged-in');
-          
+          updateFormValidation(); 
+
           showProfileModal(data.user, data.orders);
         } else {
           alert('Incorrect OTP. Please try again.');
@@ -555,123 +575,130 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   
-    /* ----- Comments with OTP ----- */
-    document.getElementById('comment-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      
-      // If user is already logged in, use their info
-      if (currentUser) {
-        const text = document.getElementById('comment-text').value.trim();
-        
-        if (!text) {
-          alert('Please enter a comment.');
-          return;
-        }
-        
-        try {
-          const res = await fetch('/api/comments', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              contactMethod: currentUser.contactMethod,
-              contactValue: currentUser.contactValue,
-              text
-            })
-          });
-          
-          if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
-          
-          const newComment = await res.json();
-          
-          // Add comment to the list
-          displayComment(newComment);
-          
-          // Clear form
-          document.getElementById('comment-text').value = '';
-          
-          alert('Comment added successfully!');
-        } catch (error) {
-          console.error('Error adding comment:', error);
-          alert('Failed to add comment. Please try again.');
-        }
-      } else {
-        // For non-logged in users, use email and OTP verification
-        const email = document.getElementById('comment-email').value.trim();
-        const text = document.getElementById('comment-text').value.trim();
-        
-        if (!email || !text) {
-          alert('Please enter both email and comment.');
-          return;
-        }
-        
-        // Simple email validation
-        if (!email.includes('@')) {
-          alert('Please enter a valid email address.');
-          return;
-        }
-        
-        // Store comment data for later use
-        pendingComment = {
-          contactMethod: 'email',
-          contactValue: email,
+/* ----- Comments with OTP ----- */
+document.getElementById('comment-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  
+  // Get comment text first
+  const text = document.getElementById('comment-text').value.trim();
+  
+  if (!text) {
+    alert('Please enter a comment.');
+    return;
+  }
+  
+  // If user is already logged in, use their info
+  if (currentUser) {
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          contactMethod: currentUser.contactMethod,
+          contactValue: currentUser.contactValue,
           text
-        };
-        
-        // Send OTP
-        if (await sendOtp('email', email)) {
-          // Open comment OTP modal instead of using prompt
-          openModal('comment-otp-modal');
-        } else {
-          alert('Failed to send verification code. Please try again.');
-        }
-      }
-    });
+        })
+      });
+      
+      if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
+      
+      const newComment = await res.json();
+      
+      // Add comment to the list
+      displayComment(newComment);
+      
+      // Clear form
+      document.getElementById('comment-text').value = '';
+      
+      alert('Comment added successfully!');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      alert('Failed to add comment. Please try again.');
+    }
+  } else {
+    // For non-logged in users, use email and OTP verification
+    const emailField = document.getElementById('comment-email');
+    const email = emailField.value.trim();
     
-    // Handle comment verification
-    document.getElementById('comment-verify-otp-btn').addEventListener('click', async () => {
-      const code = document.getElementById('comment-otp-code').value.trim();
-      
-      if (!code) {
-        alert('Please enter the verification code.');
-        return;
+    if (!email) {
+      alert('Please enter your email.');
+      return;
+    }
+    
+    // Simple email validation
+    if (!email.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    // Store comment data for later use
+    pendingComment = {
+      contactMethod: 'email',
+      contactValue: email,
+      text
+    };
+    
+    // Send OTP
+    try {
+      const otpSent = await sendOtp('email', email);
+      if (otpSent) {
+        // Open comment OTP modal
+        openModal('comment-otp-modal');
+      } else {
+        alert('Failed to send verification code. Please try again.');
       }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      alert('Failed to send verification code. Please try again.');
+    }
+  }
+});
+
+// Handle comment verification
+document.getElementById('comment-verify-otp-btn').addEventListener('click', async () => {
+  const code = document.getElementById('comment-otp-code').value.trim();
+  
+  if (!code) {
+    alert('Please enter the verification code.');
+    return;
+  }
+  
+  document.getElementById('comment-verify-otp-btn').disabled = true;
+  document.getElementById('comment-verify-otp-btn').textContent = 'Verifying...';
+  
+  try {
+    if (await verifyOtp('email', pendingComment.contactValue, code)) {
+      // Post comment to API
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(pendingComment)
+      });
       
-      document.getElementById('comment-verify-otp-btn').disabled = true;
-      document.getElementById('comment-verify-otp-btn').textContent = 'Verifying...';
+      if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
       
-      try {
-        if (await verifyOtp('email', pendingComment.contactValue, code)) {
-          // Post comment to API
-          const res = await fetch('/api/comments', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(pendingComment)
-          });
-          
-          if (!res.ok) throw new Error(`Server responded with status: ${res.status}`);
-          
-          const newComment = await res.json();
-          
-          // Add to the comments list
-          displayComment(newComment);
-          
-          // Clear form and close modal
-          document.getElementById('comment-email').value = '';
-          document.getElementById('comment-text').value = '';
-          closeModal('comment-otp-modal');
-          
-          alert('Comment added successfully!');
-        } else {
-          alert('Incorrect verification code. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error adding comment:', error);
-        alert('Error saving comment. Please try again.');
-      } finally {
-        document.getElementById('comment-verify-otp-btn').disabled = false;
-        document.getElementById('comment-verify-otp-btn').textContent = 'Verify OTP';
-      }
-    });
+      const newComment = await res.json();
+      
+      // Add to the comments list
+      displayComment(newComment);
+      
+      // Clear form and close modal
+      document.getElementById('comment-email').value = '';
+      document.getElementById('comment-text').value = '';
+      closeModal('comment-otp-modal');
+      
+      alert('Comment added successfully!');
+    } else {
+      alert('Incorrect verification code. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    alert('Error saving comment. Please try again.');
+  } finally {
+    document.getElementById('comment-verify-otp-btn').disabled = false;
+    document.getElementById('comment-verify-otp-btn').textContent = 'Verify OTP';
+  }
+});
     
     // Load existing comments
     loadComments();
