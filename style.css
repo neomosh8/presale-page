@@ -652,6 +652,20 @@ footer {
     letter-spacing: -0.01em;
 }
 
+.modal-content label {
+    display: inline-block;
+    margin-right: 15px;
+    font-weight: 500;
+    font-size: 0.95em;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.modal-content input[type="radio"] {
+    margin-right: 5px;
+    width: auto;
+}
+
 .modal-content input:not([type="radio"]),
 .modal-content select {
     width: 100%;
@@ -724,6 +738,14 @@ footer {
     background: rgba(255, 255, 255, 0.6);
 }
 
+/* OTP Sections */
+#purchase-otp-section,
+#login-otp-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(203, 213, 225, 0.5);
+}
+
 /* Verification badge and comment header */
 .comment-header {
     display: flex;
@@ -741,6 +763,27 @@ footer {
     padding: 4px 10px;
     border-radius: 6px;
     margin-left: 10px;
+}
+
+/* Logout button */
+#logout-btn {
+    background-color: #EF4444;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 25px;
+    width: 100%;
+    font-size: 1.05em;
+    transition: all 0.25s ease;
+}
+
+#logout-btn:hover {
+    background-color: #DC2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 /* Order success modal */
@@ -788,115 +831,6 @@ footer {
 /* Hide comment email field when logged in */
 .user-logged-in #comment-email-container {
     display: none;
-}
-
-/* ----------------------------------------------------
-   NEW MODAL STYLES - Updated OTP and Profile Modals
----------------------------------------------------- */
-
-/* Hide radio buttons but keep them in DOM for functionality */
-.modal-content input[type="radio"],
-.modal-content label {
-    position: absolute;
-    opacity: 0;
-    height: 0;
-    width: 0;
-    overflow: hidden;
-}
-
-/* OTP Modal Styles - New Design */
-.contact-toggle {
-    display: block;
-    text-align: center;
-    margin-top: 8px;
-    color: var(--medium-gray);
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.9em;
-  }
-
-.contact-toggle:hover {
-    color: var(--dark-gray);
-}
-
-/* OTP Verification Section - New Design */
-.otp-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.otp-actions button {
-    flex: 1;
-    margin-top: 0;
-}
-
-.otp-resend {
-    background: #E2E8F0 !important;
-    color: var(--dark-gray) !important;
-    box-shadow: none !important;
-}
-
-.otp-resend:hover {
-    background: #CBD5E1 !important;
-    transform: translateY(-2px);
-}
-
-/* Profile Modal - New Design */
-.profile-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 25px;
-}
-
-.profile-actions button {
-    flex: 1;
-    margin-top: 0 !important;
-}
-
-#profile-close-btn {
-    background-color: var(--primary-color);
-}
-
-#logout-btn {
-    background-color: transparent !important;
-    color: #EF4444 !important;
-    border: 1px solid #EF4444 !important;
-    box-shadow: none !important;
-}
-
-#logout-btn:hover {
-    background-color: rgba(239, 68, 68, 0.05) !important;
-    transform: translateY(-2px);
-}
-
-/* Make sure these styles have higher specificity */
-.modal-content .otp-resend,
-body .modal-content button.otp-resend {
-    background: #E2E8F0 !important;
-    color: var(--dark-gray) !important;
-    box-shadow: none !important;
-}
-
-.modal-content .profile-actions #logout-btn,
-body .modal-content .profile-actions #logout-btn {
-    background-color: transparent !important;
-    color: #EF4444 !important;
-    border: 1px solid #EF4444 !important;
-    box-shadow: none !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 600px) {
-    .otp-actions {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .profile-actions {
-        flex-direction: column;
-        gap: 10px;
-    }
 }
 
 /* ---------------------------------------------------------------------------
