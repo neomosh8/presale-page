@@ -1,13 +1,11 @@
 import { createClient } from 'redis';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
-import twilio from 'twilio';
 import sgMail from '@sendgrid/mail';
 
 export const config = { api: { bodyParser: false } };
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-const twClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 export default async function handler(req, res) {
   const sig = req.headers['stripe-signature'];
@@ -40,20 +38,44 @@ export default async function handler(req, res) {
       const user = JSON.parse(userStr);
       const order = JSON.parse(orderStr);
 
-      // Plain text details for SMS
-      const plainTextDetails = [
-        `Thank you for your purchase!`,
-        `Order ID: ${order.id}`,
-        `Amount: $${order.amount.toFixed(2)}`,
-        `Shipping to: ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.country}`
-      ].join('\n');
+      console.log(`Processing order ${orderId} for user ${userKey}`);
+      
+      // Determine recipient email
+      // First try shipping email, then check if contact value is an email, otherwise fallback to admin
+      let recipientEmail;
+      
+      if (order.shipping && order.shipping.email) {
+        recipientEmail = order.shipping.email;
+      } else if (user.contactMethod === 'email') {
+        recipientEmail = user.contactValue;
+      } else if (user.contactValue && user.contactValue.includes('@')) {
+        // It's possible contact value is an email even if method is 'sms'
+        recipientEmail = user.contactValue;
+      } else {
+        // Extract email from shipping phone field if it happens to contain an email
+        const emailRegex = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/;
+        const phoneEmail = order.shipping && order.shipping.phone && order.shipping.phone.match(emailRegex);
+        
+        if (phoneEmail) {
+          recipientEmail = phoneEmail[0];
+        } else {
+          // Last resort - send to an admin address
+          recipientEmail = process.env.ADMIN_EMAIL || process.env.SENDGRID_FROM_EMAIL;
+          console.log(`No recipient email found, sending to admin: ${recipientEmail}`);
+        }
+      }
+      
+      console.log(`Sending order confirmation email to: ${recipientEmail}`);
 
-      if (user.contactMethod === 'email') {
-        // Send email using dynamic template
+      // Send email using SendGrid template
+      try {
+        if (!process.env.SENDGRID_ORDER_TEMPLATE_ID) {
+          throw new Error('SendGrid template ID not configured');
+        }
+        
         await sgMail.send({
-          to: user.contactValue,
+          to: recipientEmail,
           from: process.env.SENDGRID_FROM_EMAIL,
-          // Replace with your actual template ID from SendGrid
           template_id: process.env.SENDGRID_ORDER_TEMPLATE_ID,
           dynamic_template_data: {
             order_id: order.id,
@@ -64,22 +86,20 @@ export default async function handler(req, res) {
             address_city: order.shipping.city || '',
             address_country: order.shipping.country || '',
             phone: order.shipping.phone || '',
+            email: recipientEmail,
             items: [
-              // You can replace this with actual items if you track them
               {
                 name: "Awesome Product",
                 price: `$${order.amount.toFixed(2)}`,
-                image_url: "https://via.placeholder.com/100x100" // Placeholder, replace with your actual product image
+                image_url: "https://via.placeholder.com/100x100"
               }
             ]
           }
         });
-      } else {
-        await twClient.messages.create({
-          body: plainTextDetails,
-          to: user.contactValue,
-          from: process.env.TWILIO_PHONE_NUMBER
-        });
+        
+        console.log('Order confirmation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending order confirmation email:', emailError);
       }
     } catch (error) {
       console.error('Webhook processing error:', error);

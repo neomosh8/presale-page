@@ -446,7 +446,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       address: f['ship-address'].value,
       city: f['ship-city'].value,
       country: f['ship-country'].value,
-      phone: f['ship-phone'].value
+      phone: f['ship-phone'].value,
+      email: f['ship-email'].value 
+
     };
     
     try {
