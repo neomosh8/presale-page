@@ -268,3 +268,38 @@ footer{
     border-radius:6px;cursor:pointer;font-weight:600;width:100%
 }
 .modal-content button:disabled{background:#aaa;cursor:not-allowed}
+/* Verified Purchase Badge */
+.comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  
+  .verified-badge {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-size: 0.7em;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+  
+  /* Logout button */
+  #logout-btn {
+    background-color: #e53e3e;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+  }
+  
+  #logout-btn:hover {
+    background-color: #c53030;
+  }
