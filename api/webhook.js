@@ -1,6 +1,6 @@
+import { kv } from '@vercel/kv';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
-import { KV } from '@vercel/kv';
 import twilio from 'twilio';
 import sgMail from '@sendgrid/mail';
 
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const sess = event.data.object;
     const { orderId, user: userKey } = sess.metadata;
-    const kv = new KV();
-    const user   = await kv.get(`user:${userKey}`);
-    const order  = await kv.get(`order:${orderId}`);
+    
+    const user = await kv.get(`user:${userKey}`);
+    const order = await kv.get(`order:${orderId}`);
 
     const details = [
       `Thank you for your purchase!`,
@@ -35,20 +35,19 @@ export default async function handler(req, res) {
 
     if (user.contactMethod === 'sms') {
       await twClient.messages.create({
-        body:   details,
-        to:     user.contactValue,
-        from:   process.env.TWILIO_PHONE_NUMBER
+        body: details,
+        to: user.contactValue,
+        from: process.env.TWILIO_PHONE_NUMBER
       });
     } else {
       await sgMail.send({
-        to:      user.contactValue,
-        from:    process.env.SENDGRID_FROM_EMAIL,
+        to: user.contactValue,
+        from: process.env.SENDGRID_FROM_EMAIL,
         subject: 'Your Order Details',
-        text:    details
+        text: details
       });
     }
   }
 
   res.json({ received: true });
 }
-

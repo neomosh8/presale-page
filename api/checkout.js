@@ -1,11 +1,10 @@
+import { kv } from '@vercel/kv';
 import Stripe from 'stripe';
-import { KV } from '@vercel/kv';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   const { amount, contactMethod, contactValue, shipping } = req.body;
-  const kv = new KV();
 
   // Create or update user
   const userKey = `${contactMethod}:${contactValue}`;
@@ -20,7 +19,7 @@ export default async function handler(req, res) {
   const order = { id: orderId, amount, shipping, created: new Date().toISOString(), user: userKey };
   await kv.set(`order:${orderId}`, order);
 
-  // Append to user’s order list
+  // Append to user's order list
   let orders = (await kv.get(`orders:${userKey}`)) || [];
   orders.push(orderId);
   await kv.set(`orders:${userKey}`, orders);
