@@ -138,12 +138,10 @@ function closeModal(modalId) {
   // Reset OTP sections
   if (modalId === 'purchase-otp-modal') {
     document.getElementById('purchase-otp-section').style.display = 'none';
-    const sendBtn = document.getElementById('purchase-send-otp-btn');
-    if (sendBtn) sendBtn.disabled = false;
+    document.getElementById('purchase-send-otp-btn').disabled = false;
   } else if (modalId === 'login-modal') {
     document.getElementById('login-otp-section').style.display = 'none';
-    const sendBtn = document.getElementById('login-send-otp-btn');
-    if (sendBtn) sendBtn.disabled = false;
+    document.getElementById('login-send-otp-btn').disabled = false;
   }
 }
 
@@ -250,9 +248,6 @@ async function showProfileModal(user, orders) {
     document.querySelector('#profile-modal .modal-content').appendChild(logoutBtn);
   }
   
-  // Update profile modal with new design
-  updateProfileModal();
-  
   openModal('profile-modal');
 }
 
@@ -328,294 +323,12 @@ async function updateUserProfile(currentContactMethod, currentContactValue, upda
 
 function updateFormValidation() {
   const emailField = document.getElementById('comment-email');
-  if (emailField) {
-    if (currentUser) {
-      // If logged in, remove required attribute
-      emailField.removeAttribute('required');
-    } else {
-      // If not logged in, add required attribute
-      emailField.setAttribute('required', '');
-    }
-  }
-}
-
-// Function to update OTP modals with better error handling
-function updateOTPModals() {
-  try {
-    // Purchase OTP Modal
-    const purchaseOTPModal = document.getElementById('purchase-otp-modal');
-    if (purchaseOTPModal) {
-      // Create a completely new modal content without relying on finding radio buttons
-      const modalContent = purchaseOTPModal.querySelector('.modal-content');
-      
-      if (!modalContent) {
-        console.log('Modal content not found, skipping update');
-        return;
-      }
-      
-      // Keep the close button if it exists
-      const closeButton = modalContent.querySelector('.close-modal');
-      const modalTitle = modalContent.querySelector('h3');
-      
-      // Create new modal content
-      const newContent = document.createElement('div');
-      newContent.className = 'modal-content';
-      
-      // Add title and close button if they existed
-      if (modalTitle) {
-        newContent.appendChild(modalTitle.cloneNode(true));
-      } else {
-        const title = document.createElement('h3');
-        title.textContent = 'Verify to Purchase';
-        newContent.appendChild(title);
-      }
-      
-      if (closeButton) {
-        newContent.appendChild(closeButton.cloneNode(true));
-      } else {
-        const close = document.createElement('span');
-        close.className = 'close-modal';
-        close.setAttribute('data-modal', 'purchase-otp-modal');
-        close.innerHTML = '&times;';
-        newContent.appendChild(close);
-      }
-      
-      // Add the form elements
-      const formContainer = document.createElement('div');
-      formContainer.innerHTML = `
-        <input type="hidden" name="purchase-contact-method" value="email">
-        <div>
-          <input id="purchase-contact-value" type="email" placeholder="Enter email address" required>
-          <button id="purchase-send-otp-btn">Send Verification Code</button>
-          <a class="contact-toggle" id="purchase-toggle-contact">Use phone number instead</a>
-        </div>
-        <div id="purchase-otp-section" style="display:none">
-          <input id="purchase-otp-code" placeholder="Enter verification code" required>
-          <div class="otp-actions">
-            <button id="purchase-verify-otp-btn">Verify</button>
-            <button id="purchase-resend-otp-btn" class="otp-resend">Resend Code</button>
-          </div>
-        </div>
-      `;
-      
-      newContent.appendChild(formContainer);
-      
-      // Replace the entire modal content
-      modalContent.parentNode.replaceChild(newContent, modalContent);
-      
-      // Add event listeners
-      const toggleContact = document.getElementById('purchase-toggle-contact');
-      const contactInput = document.getElementById('purchase-contact-value');
-      const contactMethodInput = purchaseOTPModal.querySelector('input[name="purchase-contact-method"]');
-      
-      if (toggleContact && contactInput && contactMethodInput) {
-        toggleContact.addEventListener('click', () => {
-          const isEmail = contactInput.type === 'email';
-          
-          if (isEmail) {
-            // Switch to phone
-            contactInput.type = 'tel';
-            contactInput.placeholder = 'Enter phone number';
-            contactInput.pattern = '[0-9+\\-\\s()]{6,20}';
-            toggleContact.textContent = 'Use email instead';
-            contactMethodInput.value = 'sms';
-          } else {
-            // Switch to email
-            contactInput.type = 'email';
-            contactInput.placeholder = 'Enter email address';
-            contactInput.removeAttribute('pattern');
-            toggleContact.textContent = 'Use phone number instead';
-            contactMethodInput.value = 'email';
-          }
-        });
-      }
-      
-      // Add send OTP button listener
-      const sendBtn = document.getElementById('purchase-send-otp-btn');
-      if (sendBtn) {
-        sendBtn.addEventListener('click', async () => {
-          const inputElem = document.getElementById('purchase-contact-value');
-          const method = inputElem.type === 'email' ? 'email' : 'sms';
-          const val = inputElem.value.trim();
-          
-          if (!val) {
-            alert('Please enter your contact information.');
-            return;
-          }
-          
-          // Validate based on current input type
-          if (inputElem.type === 'email' && !val.includes('@')) {
-            alert('Please enter a valid email address.');
-            return;
-          }
-          
-          // Update the hidden input for consistency
-          contactMethodInput.value = method;
-          
-          sendBtn.disabled = true;
-          sendBtn.textContent = 'Sending...';
-          
-          if (await sendOtp(method, val)) {
-            document.getElementById('purchase-otp-section').style.display = 'block';
-            sendBtn.textContent = 'Send Verification Code';
-            sendBtn.disabled = false;
-          } else {
-            alert('Failed to send OTP. Please try again.');
-            sendBtn.textContent = 'Send Verification Code';
-            sendBtn.disabled = false;
-          }
-        });
-      }
-      
-      // Add resend button listener
-      const resendBtn = document.getElementById('purchase-resend-otp-btn');
-      if (resendBtn) {
-        resendBtn.addEventListener('click', async () => {
-          const inputElem = document.getElementById('purchase-contact-value');
-          const method = inputElem.type === 'email' ? 'email' : 'sms';
-          const val = inputElem.value.trim();
-          
-          if (!val) {
-            alert('Please enter your contact information.');
-            return;
-          }
-          
-          // Validate based on current input type
-          if (inputElem.type === 'email' && !val.includes('@')) {
-            alert('Please enter a valid email address.');
-            return;
-          }
-          
-          resendBtn.disabled = true;
-          resendBtn.textContent = 'Sending...';
-          
-          if (await sendOtp(method, val)) {
-            resendBtn.textContent = 'Resend Code';
-            resendBtn.disabled = false;
-          } else {
-            alert('Failed to send verification code. Please try again.');
-            resendBtn.textContent = 'Resend Code';
-            resendBtn.disabled = false;
-          }
-        });
-      }
-      
-      // Add verify button listener
-      const verifyBtn = document.getElementById('purchase-verify-otp-btn');
-      if (verifyBtn) {
-        verifyBtn.addEventListener('click', async () => {
-          const inputElem = document.getElementById('purchase-contact-value');
-          const method = inputElem.type === 'email' ? 'email' : 'sms';
-          const val = inputElem.value.trim();
-          const code = document.getElementById('purchase-otp-code')?.value.trim() || '';
-          
-          if (!code) {
-            alert('Please enter the verification code.');
-            return;
-          }
-          
-          verifyBtn.disabled = true;
-          verifyBtn.textContent = 'Verifying...';
-          
-          if (await verifyOtp(method, val, code)) {
-            currentPurchase.contactMethod = method;
-            currentPurchase.contactValue = val;
-            
-            // Also update the current user
-            currentUser = { contactMethod: method, contactValue: val };
-            document.getElementById('login-button').textContent = 'My Profile';
-            document.getElementById('comment-form').classList.add('user-logged-in');
-            updateFormValidation(); 
-        
-            // Generate auth token
-            try {
-              const tokenRes = await fetch('/api/auth-token', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  action: 'create',
-                  contactMethod: method,
-                  contactValue: val
-                })
-              });
-              
-              if (tokenRes.ok) {
-                const tokenData = await tokenRes.json();
-                authToken = tokenData.token;
-                localStorage.setItem('authToken', authToken);
-              }
-            } catch (error) {
-              console.error('Error creating auth token:', error);
-            }
-            
-            closeModal('purchase-otp-modal');
-            openModal('shipping-modal');
-            
-            // Pre-populate shipping form with verified contact info
-            if (method === 'email') {
-              document.querySelector('input[name="ship-email"]').value = val;
-            } else if (method === 'sms') {
-              document.querySelector('input[name="ship-phone"]').value = val;
-            }
-          } else {
-            alert('Incorrect verification code. Please try again.');
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = 'Verify';
-          }
-        });
-      }
-      
-      // Set up the close button event listener if needed
-      const newCloseBtn = newContent.querySelector('.close-modal');
-      if (newCloseBtn) {
-        newCloseBtn.addEventListener('click', () => {
-          closeModal('purchase-otp-modal');
-        });
-      }
-    }
-    
-    // Login OTP Modal - similar approach
-    const loginOTPModal = document.getElementById('login-modal');
-    if (loginOTPModal) {
-      // Repeat similar pattern for login modal
-      // (Code omitted for brevity but would follow the same pattern)
-    }
-    
-    // Comment OTP Modal  
-    const commentOTPModal = document.getElementById('comment-otp-modal');
-    if (commentOTPModal) {
-      // Existing logic for comment OTP modal can remain as is
-    }
-  } catch (error) {
-    console.error('Error updating OTP modals:', error);
-  }
-}
-
-// Function to update profile modal with better error handling
-function updateProfileModal() {
-  try {
-    const profileModal = document.getElementById('profile-modal');
-    if (profileModal) {
-      const closeBtn = document.getElementById('profile-close-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      
-      // Only proceed if both buttons exist
-      if (closeBtn && logoutBtn && !profileModal.querySelector('.profile-actions')) {
-        // Create actions container
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'profile-actions';
-        
-        // Move buttons to container
-        closeBtn.parentNode.insertBefore(actionsDiv, closeBtn);
-        actionsDiv.appendChild(closeBtn);
-        actionsDiv.appendChild(logoutBtn);
-        
-        // Update button text
-        closeBtn.textContent = 'Close';
-      }
-    }
-  } catch (error) {
-    console.error('Error updating profile modal:', error);
+  if (currentUser) {
+    // If logged in, remove required attribute
+    emailField.removeAttribute('required');
+  } else {
+    // If not logged in, add required attribute
+    emailField.setAttribute('required', '');
   }
 }
 
@@ -641,7 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
     document.body.appendChild(orderSuccessModal);
   }
-  updateOTPModals();
 
   /* ----- Populate prices ----- */
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
@@ -708,6 +420,113 @@ document.addEventListener('DOMContentLoaded', async () => {
         openModal('purchase-otp-modal');
       }
     });
+  });
+
+  /* contact method switch - purchase */
+  document.getElementsByName('purchase-contact-method').forEach(r => {
+    r.addEventListener('change', e => {
+      const inp = document.getElementById('purchase-contact-value');
+      if (e.target.value === 'sms') {
+        inp.type = 'tel';
+        inp.placeholder = 'Enter phone number';
+        inp.pattern = '[0-9+\\-\\s()]{6,20}';
+      } else {
+        inp.type = 'email';
+        inp.placeholder = 'Enter email address';
+        inp.pattern = '';
+      }
+    });
+  });
+
+  /* send OTP (purchase) */
+  document.getElementById('purchase-send-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
+    const val = document.getElementById('purchase-contact-value').value.trim();
+    
+    if (!val) {
+      alert('Please enter your contact information.');
+      return;
+    }
+    
+    if (method === 'email' && !val.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    const btn = document.getElementById('purchase-send-otp-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    if (await sendOtp(method, val)) {
+      document.getElementById('purchase-otp-section').style.display = 'block';
+      btn.textContent = 'Resend OTP';
+      btn.disabled = false;
+    } else {
+      alert('Failed to send OTP. Please try again.');
+      btn.textContent = 'Send OTP';
+      btn.disabled = false;
+    }
+  });
+
+  /* verify OTP (purchase) */
+  document.getElementById('purchase-verify-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
+    const val = document.getElementById('purchase-contact-value').value.trim();
+    const code = document.getElementById('purchase-otp-code').value.trim();
+    
+    if (!code) {
+      alert('Please enter the OTP code.');
+      return;
+    }
+    
+    document.getElementById('purchase-verify-otp-btn').disabled = true;
+    document.getElementById('purchase-verify-otp-btn').textContent = 'Verifying...';
+    
+    if (await verifyOtp(method, val, code)) {
+      currentPurchase.contactMethod = method;
+      currentPurchase.contactValue = val;
+      
+      // Also update the current user
+      currentUser = { contactMethod: method, contactValue: val };
+      document.getElementById('login-button').textContent = 'My Profile';
+      document.getElementById('comment-form').classList.add('user-logged-in');
+      updateFormValidation(); 
+  
+      // Generate auth token
+      try {
+        const tokenRes = await fetch('/api/auth-token', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            action: 'create',
+            contactMethod: method,
+            contactValue: val
+          })
+        });
+        
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          authToken = tokenData.token;
+          localStorage.setItem('authToken', authToken);
+        }
+      } catch (error) {
+        console.error('Error creating auth token:', error);
+      }
+      
+      closeModal('purchase-otp-modal');
+      openModal('shipping-modal');
+      
+      // Pre-populate shipping form with verified contact info
+      if (method === 'email') {
+        document.querySelector('input[name="ship-email"]').value = val;
+      } else if (method === 'sms') {
+        document.querySelector('input[name="ship-phone"]').value = val;
+      }
+    } else {
+      alert('Incorrect OTP. Please try again.');
+      document.getElementById('purchase-verify-otp-btn').disabled = false;
+      document.getElementById('purchase-verify-otp-btn').textContent = 'Verify OTP';
+    }
   });
 
   /* shipping form → Stripe */
@@ -830,6 +649,102 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     } else {
       openModal('login-modal');
+    }
+  });
+  
+  document.getElementsByName('login-contact-method').forEach(r => {
+    r.addEventListener('change', e => {
+      const inp = document.getElementById('login-contact-value');
+      if (e.target.value === 'sms') {
+        inp.type = 'tel';
+        inp.placeholder = 'Enter phone number';
+        inp.pattern = '[0-9+\\-\\s()]{6,20}';
+      } else {
+        inp.type = 'email';
+        inp.placeholder = 'Enter email address';
+        inp.pattern = '';
+      }
+    });
+  });
+  
+  document.getElementById('login-send-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="login-contact-method"]:checked').value;
+    const val    = document.getElementById('login-contact-value').value.trim();
+  
+    if (!val) {
+      alert('Please enter your contact information.');
+      return;
+    }
+    if (method === 'email' && !val.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+  
+    const btn = document.getElementById('login-send-otp-btn');
+    btn.disabled   = true;
+    btn.textContent = 'Sending...';
+  
+    if (await sendOtp(method, val)) {
+      // show OTP section
+      document.getElementById('login-otp-section').style.display = 'block';
+      btn.textContent = 'Resend OTP';
+      btn.disabled   = false;
+    } else {
+      alert('Failed to send OTP. Please try again.');
+      btn.textContent = 'Send OTP';
+      btn.disabled   = false;
+    }
+  });
+  
+  document.getElementById('login-verify-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="login-contact-method"]:checked').value;
+    const val = document.getElementById('login-contact-value').value.trim();
+    const code = document.getElementById('login-otp-code').value.trim();
+    
+    if (!code) {
+      alert('Please enter the OTP code.');
+      return;
+    }
+    
+    document.getElementById('login-verify-otp-btn').disabled = true;
+    document.getElementById('login-verify-otp-btn').textContent = 'Verifying...';
+    
+    try {
+      if (await verifyOtp(method, val, code)) {
+        closeModal('login-modal');
+        
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({contactMethod: method, contactValue: val})
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Server responded with status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        // Save auth token in localStorage
+        authToken = data.token;
+        localStorage.setItem('authToken', authToken);
+        
+        // Update current user
+        currentUser = data.user;
+        document.getElementById('login-button').textContent = 'My Profile';
+        document.getElementById('comment-form').classList.add('user-logged-in');
+        updateFormValidation(); 
+
+        showProfileModal(data.user, data.orders);
+      } else {
+        alert('Incorrect OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
+    } finally {
+      document.getElementById('login-verify-otp-btn').disabled = false;
+      document.getElementById('login-verify-otp-btn').textContent = 'Verify & Load Profile';
     }
   });
   
@@ -1052,9 +967,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       document.getElementById('order-info-display').innerHTML = orderInfoHtml;
     }
-    setTimeout(updateOTPModals, 100);
-    setTimeout(updateOTPModals, 500);
-    setTimeout(updateOTPModals, 1000);
+    
     // Clear pending order from localStorage
     localStorage.removeItem('pendingOrder');
     
@@ -1070,14 +983,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else if (urlParams.get('canceled') === 'true') {
     alert('Your order was canceled. If you need assistance, please contact us.');
   }
-  
-  // Call the modal update functions after a short delay to ensure DOM is ready
-  setTimeout(() => {
-    try {
-      updateOTPModals();
-      updateProfileModal();
-    } catch (error) {
-      console.error('Error updating modals:', error);
-    }
-  }, 100);
 });
