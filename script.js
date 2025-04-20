@@ -476,36 +476,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   document.getElementById('login-send-otp-btn').addEventListener('click', async () => {
     const method = document.querySelector('input[name="login-contact-method"]:checked').value;
-    const val = document.getElementById('login-contact-value').value.trim();
-    
+    const val    = document.getElementById('login-contact-value').value.trim();
+  
     if (!val) {
       alert('Please enter your contact information.');
       return;
     }
-    
-    // Simple validation
     if (method === 'email' && !val.includes('@')) {
       alert('Please enter a valid email address.');
       return;
     }
-    
-    document.getElementById('login-send-otp-btn').disabled = true;
-    document.getElementById('login-send-otp-btn').textContent = 'Sending...';
-    
+  
+    const btn = document.getElementById('login-send-otp-btn');
+    btn.disabled   = true;
+    btn.textContent = 'Sending...';
+  
     if (await sendOtp(method, val)) {
+      // show OTP section
       document.getElementById('login-otp-section').style.display = 'block';
-      document.getElementById('login-send-otp-btn').textContent = 'Resend OTP';
-      document.getElementById('login-send-otp-btn').disabled = false;
-      if (await sendOtp(method, val)) {
-        document.getElementById('login-otp-section').style.display = 'block';
-        document.getElementById('login-send-otp-btn').textContent = 'Resend OTP';
-        document.getElementById('login-send-otp-btn').disabled = false;
-      } else {
-        alert('Failed to send OTP. Please try again.');
-        document.getElementById('login-send-otp-btn').textContent = 'Send OTP';
-        document.getElementById('login-send-otp-btn').disabled = false;
-      }
-    });
+      btn.textContent = 'Resend OTP';
+      btn.disabled   = false;
+    } else {
+      alert('Failed to send OTP. Please try again.');
+      btn.textContent = 'Send OTP';
+      btn.disabled   = false;
+    }
+  });  // ← now the async callback and addEventListener are properly closed
+  
     
     document.getElementById('login-verify-otp-btn').addEventListener('click', async () => {
       const method = document.querySelector('input[name="login-contact-method"]:checked').value;
