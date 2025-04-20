@@ -326,6 +326,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentPurchase.contactMethod = currentUser.contactMethod;
         currentPurchase.contactValue = currentUser.contactValue;
         openModal('shipping-modal');
+        
+        // Pre-populate shipping form with user information
+        if (currentUser.contactMethod === 'email') {
+          document.querySelector('input[name="ship-email"]').value = currentUser.contactValue;
+        } else if (currentUser.contactMethod === 'sms') {
+          document.querySelector('input[name="ship-phone"]').value = currentUser.contactValue;
+        }
       } else {
         openModal('purchase-otp-modal');
       }
@@ -349,32 +356,63 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* send OTP (purchase) */
-  document.getElementById('purchase-send-otp-btn').addEventListener('click', async () => {
+  document.getElementById('purchase-verify-otp-btn').addEventListener('click', async () => {
     const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
     const val = document.getElementById('purchase-contact-value').value.trim();
+    const code = document.getElementById('purchase-otp-code').value.trim();
     
-    if (!val) {
-      alert('Please enter your contact information.');
+    if (!code) {
+      alert('Please enter the OTP code.');
       return;
     }
     
-    // Simple validation
-    if (method === 'email' && !val.includes('@')) {
-      alert('Please enter a valid email address.');
-      return;
-    }
+    document.getElementById('purchase-verify-otp-btn').disabled = true;
+    document.getElementById('purchase-verify-otp-btn').textContent = 'Verifying...';
     
-    document.getElementById('purchase-send-otp-btn').disabled = true;
-    document.getElementById('purchase-send-otp-btn').textContent = 'Sending...';
-    
-    if (await sendOtp(method, val)) {
-      document.getElementById('purchase-otp-section').style.display = 'block';
-      document.getElementById('purchase-send-otp-btn').textContent = 'Resend OTP';
-      document.getElementById('purchase-send-otp-btn').disabled = false;
+    if (await verifyOtp(method, val, code)) {
+      currentPurchase.contactMethod = method;
+      currentPurchase.contactValue = val;
+      
+      // Also update the current user
+      currentUser = { contactMethod: method, contactValue: val };
+      document.getElementById('login-button').textContent = 'My Profile';
+      document.getElementById('comment-form').classList.add('user-logged-in');
+      updateFormValidation(); 
+  
+      // Generate auth token
+      try {
+        const tokenRes = await fetch('/api/auth-token', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            action: 'create',
+            contactMethod: method,
+            contactValue: val
+          })
+        });
+        
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          authToken = tokenData.token;
+          localStorage.setItem('authToken', authToken);
+        }
+      } catch (error) {
+        console.error('Error creating auth token:', error);
+      }
+      
+      closeModal('purchase-otp-modal');
+      openModal('shipping-modal');
+      
+      // Pre-populate shipping form with verified contact info
+      if (method === 'email') {
+        document.querySelector('input[name="ship-email"]').value = val;
+      } else if (method === 'sms') {
+        document.querySelector('input[name="ship-phone"]').value = val;
+      }
     } else {
-      alert('Failed to send OTP. Please try again.');
-      document.getElementById('purchase-send-otp-btn').textContent = 'Send OTP';
-      document.getElementById('purchase-send-otp-btn').disabled = false;
+      alert('Incorrect OTP. Please try again.');
+      document.getElementById('purchase-verify-otp-btn').disabled = false;
+      document.getElementById('purchase-verify-otp-btn').textContent = 'Verify OTP';
     }
   });
 
@@ -448,8 +486,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       country: f['ship-country'].value,
       phone: f['ship-phone'].value,
       email: f['ship-email'].value 
-
     };
+    
+    // Update user profile with all contact info
+    if (currentUser) {
+      // Store both email and phone from shipping form to user profile
+      const updatedContactInfo = {
+        email: shipping.email,
+        phone: shipping.phone
+      };
+      
+      try {
+        // Check if the user's profile should be enhanced with additional contact info
+        if ((currentUser.contactMethod === 'email' && shipping.phone) || 
+            (currentUser.contactMethod === 'sms' && shipping.email)) {
+          
+          // This API endpoint doesn't exist yet, but would need to be created
+          // to handle merging user contact information
+          await fetch('/api/update-user-profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              currentContactMethod: currentUser.contactMethod,
+              currentContactValue: currentUser.contactValue,
+              updatedInfo: updatedContactInfo,
+              token: authToken
+            })
+          });
+        }
+      } catch (error) {
+        console.error('Error updating user profile:', error);
+        // Continue with checkout anyway
+      }
+    }
     
     try {
       // Store order info in localStorage for retrieval after checkout

@@ -1,3 +1,4 @@
+// api/login.js - modified version
 import { createClient } from 'redis';
 import crypto from 'crypto';
 
@@ -14,10 +15,26 @@ export default async function handler(req, res) {
   try {
     const userKey = `${contactMethod}:${contactValue}`;
     
-    // Get or create user
+    // Try to get user directly
     let user = await redis.get(`user:${userKey}`);
+    
+    // If user not found, check for alternative contact reference
     if (!user) {
-      user = { contactMethod, contactValue, created: new Date().toISOString() };
+      // Check if this contact method references another user record
+      const altUserKey = await redis.get(`userRef:${userKey}`);
+      
+      if (altUserKey) {
+        user = await redis.get(`user:${altUserKey}`);
+      }
+    }
+    
+    // Create user if still not found
+    if (!user) {
+      user = { 
+        contactMethod, 
+        contactValue, 
+        created: new Date().toISOString() 
+      };
       await redis.set(`user:${userKey}`, JSON.stringify(user));
     } else {
       user = JSON.parse(user);
@@ -41,7 +58,7 @@ export default async function handler(req, res) {
     await redis.set(`token:${token}`, userKey, { EX: 60 * 60 * 24 * 30 });
     
     res.status(200).json({
-      user: { contactMethod, contactValue },
+      user: { contactMethod, contactValue, ...user },
       orders: orders.filter(order => order !== null),
       token
     });
