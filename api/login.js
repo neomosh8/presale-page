@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -12,6 +13,17 @@ export default async function handler(req, res) {
   
   try {
     const userKey = `${contactMethod}:${contactValue}`;
+    
+    // Get or create user
+    let user = await redis.get(`user:${userKey}`);
+    if (!user) {
+      user = { contactMethod, contactValue, created: new Date().toISOString() };
+      await redis.set(`user:${userKey}`, JSON.stringify(user));
+    } else {
+      user = JSON.parse(user);
+    }
+    
+    // Get user's orders
     let ordersStr = await redis.get(`orders:${userKey}`);
     const ordersKeys = ordersStr ? JSON.parse(ordersStr) : [];
     
@@ -22,9 +34,16 @@ export default async function handler(req, res) {
       })
     );
     
+    // Generate auth token
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    // Store token with 30-day expiration
+    await redis.set(`token:${token}`, userKey, { EX: 60 * 60 * 24 * 30 });
+    
     res.status(200).json({
       user: { contactMethod, contactValue },
-      orders: orders.filter(order => order !== null)
+      orders: orders.filter(order => order !== null),
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
