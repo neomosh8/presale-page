@@ -216,7 +216,8 @@
   const discountedPrice = FULL_PRICE * (1 - DISCOUNT_PCT);
 
   /* ── Helper functions ─────────────────────────────────────────────────── */
-  const formatCurrency = a => \`$\${a.toFixed(2)}\`;
+  const formatCurrency = (a) => '$' + a.toFixed(2);
+
 
   async function sendOtp(method, value){
     const res = await fetch('/api/send-otp',{
