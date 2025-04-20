@@ -13,6 +13,7 @@
     "@sendgrid/mail": "^8.1.5",
     "@vercel/kv": "^3.0.0",
     "micro": "^10.0.1",
+    "redis": "^4.7.0",
     "stripe": "^18.0.0",
     "twilio": "^5.5.2"
   }
