@@ -813,7 +813,7 @@ footer {
     text-decoration: underline;
     cursor: pointer;
     font-size: 0.9em;
-}
+  }
 
 .contact-toggle:hover {
     color: var(--dark-gray);

@@ -392,14 +392,16 @@ function updateOTPModals() {
             contactInput.placeholder = 'Enter phone number';
             contactInput.pattern = '[0-9+\\-\\s()]{6,20}';
             toggleContact.textContent = 'Use email instead';
+            // Update the hidden radio button
             const smsRadio = purchaseOTPModal.querySelector('input[value="sms"]');
             if (smsRadio) smsRadio.checked = true;
           } else {
             // Switch to email
             contactInput.type = 'email';
             contactInput.placeholder = 'Enter email address';
-            contactInput.pattern = '';
+            contactInput.removeAttribute('pattern');
             toggleContact.textContent = 'Use phone number instead';
+            // Update the hidden radio button
             if (emailRadio) emailRadio.checked = true;
           }
         });
@@ -417,7 +419,9 @@ function updateOTPModals() {
             return;
           }
           
-          if (method === 'email' && !val.includes('@')) {
+          // Validate based on current input type
+          const inputType = document.getElementById('purchase-contact-value').type;
+          if (inputType === 'email' && !val.includes('@')) {
             alert('Please enter a valid email address.');
             return;
           }
@@ -444,18 +448,24 @@ function updateOTPModals() {
         sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
         
         newSendBtn.addEventListener('click', async () => {
-          const method = purchaseOTPModal.querySelector('input[name="purchase-contact-method"]:checked')?.value || 'email';
-          const val = document.getElementById('purchase-contact-value')?.value.trim() || '';
+          const inputElem = document.getElementById('purchase-contact-value');
+          const method = inputElem.type === 'email' ? 'email' : 'sms';
+          const val = inputElem.value.trim();
           
           if (!val) {
             alert('Please enter your contact information.');
             return;
           }
           
-          if (method === 'email' && !val.includes('@')) {
+          // Validate based on current input type
+          if (inputElem.type === 'email' && !val.includes('@')) {
             alert('Please enter a valid email address.');
             return;
           }
+          
+          // Update the hidden radio for consistency
+          const radioToCheck = purchaseOTPModal.querySelector(`input[value="${method}"]`);
+          if (radioToCheck) radioToCheck.checked = true;
           
           newSendBtn.disabled = true;
           newSendBtn.textContent = 'Sending...';
@@ -480,12 +490,13 @@ function updateOTPModals() {
         verifyBtn.parentNode.replaceChild(newVerifyBtn, verifyBtn);
         
         newVerifyBtn.addEventListener('click', async () => {
-          const method = purchaseOTPModal.querySelector('input[name="purchase-contact-method"]:checked')?.value || 'email';
-          const val = document.getElementById('purchase-contact-value')?.value.trim() || '';
+          const inputElem = document.getElementById('purchase-contact-value');
+          const method = inputElem.type === 'email' ? 'email' : 'sms';
+          const val = inputElem.value.trim();
           const code = document.getElementById('purchase-otp-code')?.value.trim() || '';
           
           if (!code) {
-            alert('Please enter the OTP code.');
+            alert('Please enter the verification code.');
             return;
           }
           
@@ -533,7 +544,7 @@ function updateOTPModals() {
               document.querySelector('input[name="ship-phone"]').value = val;
             }
           } else {
-            alert('Incorrect OTP. Please try again.');
+            alert('Incorrect verification code. Please try again.');
             newVerifyBtn.disabled = false;
             newVerifyBtn.textContent = 'Verify';
           }
@@ -541,7 +552,7 @@ function updateOTPModals() {
       }
     }
     
-    // Login OTP Modal - Same pattern with improved error handling
+    // Login OTP Modal - Apply the same fixes as for the purchase modal
     const loginOTPModal = document.getElementById('login-modal');
     if (loginOTPModal) {
       const radioLabels = loginOTPModal.querySelectorAll('input[name="login-contact-method"]');
@@ -596,7 +607,7 @@ function updateOTPModals() {
             // Switch to email
             contactInput.type = 'email';
             contactInput.placeholder = 'Enter email address';
-            contactInput.pattern = '';
+            contactInput.removeAttribute('pattern');
             toggleContact.textContent = 'Use phone number instead';
             if (emailRadio) emailRadio.checked = true;
           }
@@ -607,15 +618,17 @@ function updateOTPModals() {
       const resendBtn = document.getElementById('login-resend-otp-btn');
       if (resendBtn) {
         resendBtn.addEventListener('click', async () => {
-          const method = loginOTPModal.querySelector('input[name="login-contact-method"]:checked')?.value || 'email';
-          const val = document.getElementById('login-contact-value')?.value.trim() || '';
+          const inputElem = document.getElementById('login-contact-value');
+          const method = inputElem.type === 'email' ? 'email' : 'sms';
+          const val = inputElem.value.trim();
           
           if (!val) {
             alert('Please enter your contact information.');
             return;
           }
           
-          if (method === 'email' && !val.includes('@')) {
+          // Validate based on current input type
+          if (inputElem.type === 'email' && !val.includes('@')) {
             alert('Please enter a valid email address.');
             return;
           }
@@ -642,18 +655,24 @@ function updateOTPModals() {
         sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
         
         newSendBtn.addEventListener('click', async () => {
-          const method = loginOTPModal.querySelector('input[name="login-contact-method"]:checked')?.value || 'email';
-          const val = document.getElementById('login-contact-value')?.value.trim() || '';
+          const inputElem = document.getElementById('login-contact-value');
+          const method = inputElem.type === 'email' ? 'email' : 'sms';
+          const val = inputElem.value.trim();
           
           if (!val) {
             alert('Please enter your contact information.');
             return;
           }
           
-          if (method === 'email' && !val.includes('@')) {
+          // Validate based on current input type
+          if (inputElem.type === 'email' && !val.includes('@')) {
             alert('Please enter a valid email address.');
             return;
           }
+          
+          // Update the hidden radio for consistency
+          const radioToCheck = loginOTPModal.querySelector(`input[value="${method}"]`);
+          if (radioToCheck) radioToCheck.checked = true;
           
           newSendBtn.disabled = true;
           newSendBtn.textContent = 'Sending...';
@@ -678,12 +697,13 @@ function updateOTPModals() {
         verifyBtn.parentNode.replaceChild(newVerifyBtn, verifyBtn);
         
         newVerifyBtn.addEventListener('click', async () => {
-          const method = loginOTPModal.querySelector('input[name="login-contact-method"]:checked')?.value || 'email';
-          const val = document.getElementById('login-contact-value')?.value.trim() || '';
+          const inputElem = document.getElementById('login-contact-value');
+          const method = inputElem.type === 'email' ? 'email' : 'sms';
+          const val = inputElem.value.trim();
           const code = document.getElementById('login-otp-code')?.value.trim() || '';
           
           if (!code) {
-            alert('Please enter the OTP code.');
+            alert('Please enter the verification code.');
             return;
           }
           
@@ -718,7 +738,7 @@ function updateOTPModals() {
     
               showProfileModal(data.user, data.orders);
             } else {
-              alert('Incorrect OTP. Please try again.');
+              alert('Incorrect verification code. Please try again.');
             }
           } catch (error) {
             console.error('Login error:', error);
@@ -731,7 +751,7 @@ function updateOTPModals() {
       }
     }
     
-    // Comment OTP Modal
+    // Comment OTP Modal - Same pattern with fixed styles
     const commentOTPModal = document.getElementById('comment-otp-modal');
     if (commentOTPModal) {
       const otpInput = commentOTPModal.querySelector('#comment-otp-code');
@@ -839,6 +859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
     document.body.appendChild(orderSuccessModal);
   }
+  updateOTPModals();
 
   /* ----- Populate prices ----- */
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
@@ -1249,7 +1270,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       document.getElementById('order-info-display').innerHTML = orderInfoHtml;
     }
-    
+    setTimeout(updateOTPModals, 100);
+    setTimeout(updateOTPModals, 500);
+    setTimeout(updateOTPModals, 1000);
     // Clear pending order from localStorage
     localStorage.removeItem('pendingOrder');
     
