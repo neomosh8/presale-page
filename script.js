@@ -145,11 +145,73 @@ function closeModal(modalId) {
   }
 }
 
+// Pre-populate shipping form with user information
+function populateShippingForm(user) {
+  // Get form fields
+  const emailField = document.querySelector('input[name="ship-email"]');
+  const phoneField = document.querySelector('input[name="ship-phone"]');
+  const nameField = document.querySelector('input[name="ship-name"]');
+  const addressField = document.querySelector('input[name="ship-address"]');
+  const cityField = document.querySelector('input[name="ship-city"]');
+  const countryField = document.querySelector('input[name="ship-country"]');
+  
+  // Populate primary contact
+  if (user.contactMethod === 'email') {
+    emailField.value = user.contactValue;
+  } else if (user.contactMethod === 'sms') {
+    phoneField.value = user.contactValue;
+  }
+  
+  // Populate secondary contacts if available
+  if (user.email && user.contactMethod !== 'email') {
+    emailField.value = user.email;
+  }
+  
+  if (user.phone && user.contactMethod !== 'sms') {
+    phoneField.value = user.phone;
+  }
+  
+  // If we have stored shipping info, pre-populate other fields
+  if (user.shippingInfo) {
+    nameField.value = user.shippingInfo.name || '';
+    addressField.value = user.shippingInfo.address || '';
+    cityField.value = user.shippingInfo.city || '';
+    countryField.value = user.shippingInfo.country || '';
+  }
+}
+
 // Show profile modal with user data
 async function showProfileModal(user, orders) {
-  document.getElementById('profile-contact').textContent =
-    `Signed in as ${user.contactMethod}: ${user.contactValue}`;
+  // Create contact info HTML
+  let contactHTML = '';
   
+  // Display primary contact method
+  contactHTML += `<p><strong>Primary Contact (${user.contactMethod}):</strong> ${user.contactValue}</p>`;
+  
+  // Display secondary contact methods if available
+  if (user.email && user.contactMethod !== 'email') {
+    contactHTML += `<p><strong>Email:</strong> ${user.email}</p>`;
+  }
+  
+  if (user.phone && user.contactMethod !== 'sms') {
+    contactHTML += `<p><strong>Phone:</strong> ${user.phone}</p>`;
+  }
+  
+  // Add shipping info if available
+  if (user.shippingInfo) {
+    contactHTML += '<p><strong>Shipping Address:</strong><br>';
+    if (user.shippingInfo.name) contactHTML += `${user.shippingInfo.name}<br>`;
+    if (user.shippingInfo.address) contactHTML += `${user.shippingInfo.address}<br>`;
+    if (user.shippingInfo.city && user.shippingInfo.country) {
+      contactHTML += `${user.shippingInfo.city}, ${user.shippingInfo.country}`;
+    }
+    contactHTML += '</p>';
+  }
+  
+  // Update the profile contact element
+  document.getElementById('profile-contact').innerHTML = contactHTML;
+  
+  // Display order history
   const ul = document.getElementById('order-history');
   ul.innerHTML = '';
   
@@ -231,6 +293,31 @@ async function verifyOtp(method, value, code) {
   } catch (error) {
     console.error('Error verifying OTP:', error);
     return false;
+  }
+}
+
+async function updateUserProfile(currentContactMethod, currentContactValue, updatedInfo) {
+  try {
+    const res = await fetch('/api/update-user-profile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        currentContactMethod,
+        currentContactValue,
+        updatedInfo,
+        token: authToken
+      })
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Server responded with status: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    return data.user;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return null;
   }
 }
 
@@ -328,11 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         openModal('shipping-modal');
         
         // Pre-populate shipping form with user information
-        if (currentUser.contactMethod === 'email') {
-          document.querySelector('input[name="ship-email"]').value = currentUser.contactValue;
-        } else if (currentUser.contactMethod === 'sms') {
-          document.querySelector('input[name="ship-phone"]').value = currentUser.contactValue;
-        }
+        populateShippingForm(currentUser);
       } else {
         openModal('purchase-otp-modal');
       }
@@ -356,6 +439,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* send OTP (purchase) */
+  document.getElementById('purchase-send-otp-btn').addEventListener('click', async () => {
+    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
+    const val = document.getElementById('purchase-contact-value').value.trim();
+    
+    if (!val) {
+      alert('Please enter your contact information.');
+      return;
+    }
+    
+    if (method === 'email' && !val.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    const btn = document.getElementById('purchase-send-otp-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    if (await sendOtp(method, val)) {
+      document.getElementById('purchase-otp-section').style.display = 'block';
+      btn.textContent = 'Resend OTP';
+      btn.disabled = false;
+    } else {
+      alert('Failed to send OTP. Please try again.');
+      btn.textContent = 'Send OTP';
+      btn.disabled = false;
+    }
+  });
+
+  /* verify OTP (purchase) */
   document.getElementById('purchase-verify-otp-btn').addEventListener('click', async () => {
     const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
     const val = document.getElementById('purchase-contact-value').value.trim();
@@ -416,60 +529,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  /* verify OTP (purchase) */
-  document.getElementById('purchase-verify-otp-btn').addEventListener('click', async () => {
-    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
-    const val = document.getElementById('purchase-contact-value').value.trim();
-    const code = document.getElementById('purchase-otp-code').value.trim();
-    
-    if (!code) {
-      alert('Please enter the OTP code.');
-      return;
-    }
-    
-    document.getElementById('purchase-verify-otp-btn').disabled = true;
-    document.getElementById('purchase-verify-otp-btn').textContent = 'Verifying...';
-    
-    if (await verifyOtp(method, val, code)) {
-      currentPurchase.contactMethod = method;
-      currentPurchase.contactValue = val;
-      
-      // Also update the current user
-      currentUser = { contactMethod: method, contactValue: val };
-      document.getElementById('login-button').textContent = 'My Profile';
-      document.getElementById('comment-form').classList.add('user-logged-in');
-      updateFormValidation(); 
-
-      // Generate auth token
-      try {
-        const tokenRes = await fetch('/api/auth-token', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'create',
-            contactMethod: method,
-            contactValue: val
-          })
-        });
-        
-        if (tokenRes.ok) {
-          const tokenData = await tokenRes.json();
-          authToken = tokenData.token;
-          localStorage.setItem('authToken', authToken);
-        }
-      } catch (error) {
-        console.error('Error creating auth token:', error);
-      }
-      
-      closeModal('purchase-otp-modal');
-      openModal('shipping-modal');
-    } else {
-      alert('Incorrect OTP. Please try again.');
-      document.getElementById('purchase-verify-otp-btn').disabled = false;
-      document.getElementById('purchase-verify-otp-btn').textContent = 'Verify OTP';
-    }
-  });
-
   /* shipping form → Stripe */
   document.getElementById('shipping-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -493,26 +552,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Store both email and phone from shipping form to user profile
       const updatedContactInfo = {
         email: shipping.email,
-        phone: shipping.phone
+        phone: shipping.phone,
+        shippingInfo: {
+          name: shipping.name,
+          address: shipping.address,
+          city: shipping.city,
+          country: shipping.country
+        }
       };
       
       try {
-        // Check if the user's profile should be enhanced with additional contact info
-        if ((currentUser.contactMethod === 'email' && shipping.phone) || 
-            (currentUser.contactMethod === 'sms' && shipping.email)) {
+        if (authToken) {
+          // Update user profile with new contact and shipping information
+          const updatedUser = await updateUserProfile(
+            currentUser.contactMethod,
+            currentUser.contactValue,
+            updatedContactInfo
+          );
           
-          // This API endpoint doesn't exist yet, but would need to be created
-          // to handle merging user contact information
-          await fetch('/api/update-user-profile', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              currentContactMethod: currentUser.contactMethod,
-              currentContactValue: currentUser.contactValue,
-              updatedInfo: updatedContactInfo,
-              token: authToken
-            })
-          });
+          if (updatedUser) {
+            // Update current user with consolidated data
+            currentUser = {
+              ...currentUser,
+              ...updatedUser
+            };
+          }
         }
       } catch (error) {
         console.error('Error updating user profile:', error);
@@ -570,7 +634,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
       .then(res => res.json())
       .then(data => {
-        showProfileModal(data.user, data.orders);
+        // Update current user with latest data
+        currentUser = { ...currentUser, ...data.user };
+        showProfileModal(currentUser, data.orders);
       })
       .catch(err => {
         console.error('Error fetching profile:', err);
@@ -793,7 +859,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('comment-email').value = '';
         document.getElementById('comment-text').value = '';
         closeModal('comment-otp-modal');
-        
         alert('Comment added successfully!');
       } else {
         alert('Incorrect verification code. Please try again.');
