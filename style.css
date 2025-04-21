@@ -576,7 +576,6 @@ footer {
    Login Button & Modal Components
 --------------------------------------------------------------------------- */
 #login-button {
-    position: absolute;
     top: 24px;
     right: 24px;
     background: var(--primary-color);
