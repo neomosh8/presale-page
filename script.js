@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
   document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
   document.getElementById('deposit-description').innerHTML = 
-    "Secure your Awesome Product now! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today (30%) and the remaining <strong>" + formatCurrency(FULL_PRICE-depositAmount) + "</strong> upon shipment.";
+    "Secure your OneSpark now! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today and the remaining <strong>" + formatCurrency(FULL_PRICE-depositAmount) + "</strong> upon shipment (Q4 2025).";
   document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
   const buyNowDisp = document.getElementById('buy-now-price-display');
   buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
