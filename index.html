@@ -10,63 +10,88 @@
 
   <!-- Stripe.js -->
   <script src="https://js.stripe.com/v3"></script>
-  
-  <!-- Custom CSS for verified badges and other new elements -->
-  <style>
-    /* Verified Purchase Badge */
-    .comment-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
 
-    .verified-badge {
-      display: inline-block;
-      background-color: var(--primary-color);
-      color: var(--white);
-      font-size: 0.7em;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 4px;
-      margin-left: 10px;
+  <!-- Page‑specific CSS additions -->
+  <style>
+    /* ── TOP BAR ─────────────────────────────────────────────────────────── */
+    .top-bar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 24px;
+      background:#fff;
+      border-bottom:1px solid #e5e7eb; /* light gray separator */
+    }
+    .site-logo{
+      height:32px;          /* keeps it neat on all screens   */
+      width:auto;
+      display:block;
+    }
+    /* “My Profile” button (keeps original id so JS still works) */
+    #login-button{
+      background-color:#2563eb;   /* Tailwind blue‑600 */
+      color:#fff;
+      padding:8px 18px;
+      border:none;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:background-color .15s ease;
+    }
+    #login-button:hover{background-color:#1d4ed8;} /* blue‑700 */
+
+    /* Verified Purchase Badge */
+    .comment-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:5px;
+    }
+    .verified-badge{
+      display:inline-block;
+      background-color:var(--primary-color);
+      color:var(--white);
+      font-size:.7em;
+      font-weight:600;
+      padding:3px 8px;
+      border-radius:4px;
+      margin-left:10px;
     }
 
     /* Logout button */
-    #logout-btn {
-      background-color: #e53e3e;
-      color: white;
-      padding: 8px 15px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 20px;
-      width: 100%;
+    #logout-btn{
+      background-color:#e53e3e;
+      color:#fff;
+      padding:8px 15px;
+      border:none;
+      border-radius:6px;
+      font-weight:600;
+      cursor:pointer;
+      margin-top:20px;
+      width:100%;
     }
+    #logout-btn:hover{background-color:#c53030;}
 
-    #logout-btn:hover {
-      background-color: #c53030;
-    }
-    
     /* Hide comment email field when logged in */
-    .user-logged-in #comment-email-container {
-      display: none;
-    }
+    .user-logged-in #comment-email-container{display:none;}
   </style>
 </head>
 <body>
   <div class="page-container">
-    <!-- Login icon -->
-    <button id="login-button">Login</button>
+    <!-- ── TOP BAR (logo + profile) ─────────────────────────────────────── -->
+    <div class="top-bar">
+      <img src="https://sitecontent.s3.us-east-1.amazonaws.com/neocore-logo_black.png"
+           alt="Neocore logo" class="site-logo">
+      <button id="login-button">My&nbsp;Profile</button>
+    </div>
 
-    <!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+    <!-- ── HEADER ───────────────────────────────────────────────────────── -->
     <header class="product-header">
       <h1>OneSpark</h1>
-      <p class="tagline">smart headphones that personalize content for your unique mind. </p>
+      <p class="tagline">smart headphones that personalize content for your unique mind.</p>
     </header>
 
-    <!-- ── PRODUCT VIDEO ──────────────────────────────────────────────────── -->
+    <!-- ── PRODUCT VIDEO ────────────────────────────────────────────────── -->
     <section class="product-video">
       <video
         poster="https://sitecontent.s3.us-east-1.amazonaws.com/video-thumbnail.jpg"
@@ -76,7 +101,7 @@
       </video>
     </section>
 
-    <!-- ── NAVIGATION ─────────────────────────────────────────────────────── -->
+    <!-- ── NAVIGATION ───────────────────────────────────────────────────── -->
     <nav class="campaign-nav">
       <ul>
         <li><a href="#story" class="active">Campaign</a></li>
@@ -87,7 +112,7 @@
       </ul>
     </nav>
 
-    <!-- ── BODY ───────────────────────────────────────────────────────────── -->
+    <!-- ── BODY ─────────────────────────────────────────────────────────── -->
     <div class="campaign-body">
       <!-- Main campaign content -->
       <main class="campaign-content">
@@ -100,7 +125,7 @@
             When brain-computer interface technology meets Artificial Intelligence to bring the world’s first smart headphones that personalize content to your brain: OneSpark.<br><br>
             Designed with brain-sensing AI that nudges you at the optimal time so you can focus back, OneSpark adapts to your learning needs in real-time. OneSpark also suggests new content based on your interests and past activity, keeping you inspired with relevant content.<br><br>
             Thanks to OneSpark’s sensor technology, you can monitor your attention span trends and your content consumption insights on the MyBrain App, helping you track your progress and achievements.
-            </p>
+          </p>
           <img src="https://sitecontent.s3.us-east-1.amazonaws.com/AI-Powered+Headphones+for+Smarter+Listening.png" alt="neocore OneSpark; AI-Powered headphones">
           <p><strong>Benefits:</strong> Focus better – Learn smarter</p>
           <ul>
@@ -119,7 +144,6 @@
           </ul>
 
           <p><strong>Features:</strong></p>
-
           <ul>
             <li><strong>Focus shifts detection:</strong> OneSpark knows exactly when you get distracted and subtly nudges you to focus back.</li>
             <li><strong>Adaptive content delivery:</strong> OneSpark knows what type of information you need when you need it. It summarizes when your attention dips, simplifies when you are confused, or expands with more information when you are engaged.</li>
@@ -127,7 +151,6 @@
             <li><strong>Content consumption insights:</strong> OneSpark helps you understand your behaviours and be aware of your learning habits.</li>
             <li><strong>Other technical features:</strong> (Specific to headphones to reassure about the quality of sound…)</li>
           </ul>
-
         </section>
 
         <!-- Risks -->
@@ -145,9 +168,7 @@
         <!-- Comments -->
         <section id="comments-section">
           <h2>Comments</h2>
-          <div id="comments-list">
-            <!-- Loaded by JS -->
-          </div>
+          <div id="comments-list"><!-- Loaded by JS --></div>
           <form id="comment-form">
             <h3>Leave a Comment</h3>
             <div id="comment-email-container">
@@ -162,95 +183,88 @@
           </form>
         </section>
 
-<!-- ── FAQ ───────────────────────────────────────────────────────────── -->
-<section id="faq">
-  <h2>FAQ</h2>
-  <!-- ——— CORE QUESTIONS ——— -->
-  <details>
-    <summary><strong>1. What is Neocore Onespark Brainput?</strong></summary>
-    <p>A pair of EEG‑sensing headphones that reads your brainwaves from the ear canal and tweaks audio & text content in real time so it always “feels right.”</p>
-  </details>
+        <!-- ── FAQ ────────────────────────────────────────────────────────── -->
+        <section id="faq">
+          <h2>FAQ</h2>
 
-  <details>
-    <summary><strong>2. Why should I care?</strong></summary>
-    <p>No more zoning out, rewinding, or rereading. Neocore keeps you engaged, saves time, and boosts retention by matching content to your live attention state.</p>
-  </details>
+          <details>
+            <summary><strong>1. What is Neocore Onespark Brainput?</strong></summary>
+            <p>A pair of EEG‑sensing headphones that reads your brainwaves from the ear canal and tweaks audio & text content in real time so it always “feels right.”</p>
+          </details>
 
-  <details>
-    <summary><strong>3. How does it actually work?</strong></summary>
-    <p>Tiny EEG sensors track your attention levels; an on‑device AI instantly adjusts pacing, language complexity, or emphasis so the material stays compelling.</p>
-  </details>
+          <details>
+            <summary><strong>2. Why should I care?</strong></summary>
+            <p>No more zoning out, rewinding, or rereading. Neocore keeps you engaged, saves time, and boosts retention by matching content to your live attention state.</p>
+          </details>
 
-  <details>
-    <summary><strong>4. What kinds of content can it adapt?</strong></summary>
-    <p>Podcasts, audiobooks, web articles, PDFs—basically any audio or text you choose to pipe through Neocore.</p>
-  </details>
+          <details>
+            <summary><strong>3. How does it actually work?</strong></summary>
+            <p>Tiny EEG sensors track your attention levels; an on‑device AI instantly adjusts pacing, language complexity, or emphasis so the material stays compelling.</p>
+          </details>
 
-  <details>
-    <summary><strong>5. Will it change the author’s meaning?</strong></summary>
-    <p>No. The system alters style and pacing, not core ideas. You decide how much freedom it has—subtle tweaks or bolder edits.</p>
-  </details>
+          <details>
+            <summary><strong>4. What kinds of content can it adapt?</strong></summary>
+            <p>Podcasts, audiobooks, web articles, PDFs—basically any audio or text you choose to pipe through Neocore.</p>
+          </details>
 
-  <details>
-    <summary><strong>6. Do I stay in control?</strong></summary>
-    <p>Yes. Toggle intervention level, get chime alerts before each tweak, or keep everything seamless—your call.</p>
-  </details>
+          <details>
+            <summary><strong>5. Will it change the author’s meaning?</strong></summary>
+            <p>No. The system alters style and pacing, not core ideas. You decide how much freedom it has—subtle tweaks or bolder edits.</p>
+          </details>
 
-  <details>
-    <summary><strong>7. Who benefits the most?</strong></summary>
-    <p>Anyone battling distraction—students, busy professionals, commuters, people with ADHD—or anyone who just wants smarter content flow.</p>
-  </details>
+          <details>
+            <summary><strong>6. Do I stay in control?</strong></summary>
+            <p>Yes. Toggle intervention level, get chime alerts before each tweak, or keep everything seamless—your call.</p>
+          </details>
 
-  <details>
-    <summary><strong>8. How can I try it, and what does it cost?</strong></summary>
-    <p>Retail price is <strong>$390</strong>.  
-       • <em>Option A: Deposit</em>—pay <strong>$117 (30%)</strong> now, and the remaining <strong>$273</strong> when your unit ships.<br>
-       • <em>Option B: Pay in full now</em>—get a <strong>30 % launch discount</strong> and pay just <strong>$273</strong> total.</p>
-    <p><a href="#pricing">Secure your spot in the beta&nbsp;→</a></p>
-  </details>
+          <details>
+            <summary><strong>7. Who benefits the most?</strong></summary>
+            <p>Anyone battling distraction—students, busy professionals, commuters, people with ADHD—or anyone who just wants smarter content flow.</p>
+          </details>
 
-  <!-- ——— EXTRA Q&A FROM THE CONVERSATION ——— -->
-  <details>
-    <summary><strong>9. How can headphones in my ears read brainwaves?</strong></summary>
-    <p>Brain signals spread across your entire head—including the ear canal. Mini EEG sensors in each earpiece pick up those patterns—no bulky headband needed.</p>
-  </details>
+          <details>
+            <summary><strong>8. How can I try it, and what does it cost?</strong></summary>
+            <p>Retail price is <strong>$390</strong>.<br>
+               • <em>Option A: Deposit</em>—pay <strong>$117 (30%)</strong> now, and the remaining <strong>$273</strong> when your unit ships.<br>
+               • <em>Option B: Pay in full now</em>—get a <strong>30 % launch discount</strong> and pay just <strong>$273</strong> total.</p>
+            <p><a href="#pricing">Secure your spot in the beta&nbsp;→</a></p>
+          </details>
 
-  <details>
-    <summary><strong>10. Is it really rewriting content on the fly?</strong></summary>
-    <p>Yes—think of it as “smart remixing.” The AI trims, rephrases, or re‑orders segments so the story stays intact but the delivery matches your focus and mood.</p>
-  </details>
-
-  <details>
-    <summary><strong>11. What signals tell Neocore I’m zoning out?</strong></summary>
-    <p>Our models monitor attention‑related EEG markers (e.g., shifting alpha, theta, and beta patterns). When engagement dips, the AI steps in.</p>
-  </details>
-
-  <details>
-    <summary><strong>12. Will I notice when it tweaks the content?</strong></summary>
-    <p>Only if you want to. Keep it invisible or get a quick chime right before each adjustment.</p>
-  </details>
-
-  <details>
-    <summary><strong>13. Does it learn my habits over time?</strong></summary>
-    <p>Absolutely. Neocore builds a private, on‑device profile of your attention patterns, so its tweaks get smarter every session.</p>
-  </details>
-
-  <details>
-    <summary><strong>14. What do other users prefer—seamless or notified tweaks?</strong></summary>
-    <p>Early testers are split: some love full invisibility; others enjoy knowing when a tweak lands. Try both and see what fits you.</p>
-  </details>
-
-  <details>
-    <summary><strong>15. What’s up with the name “Onespark Brainput”?</strong></summary>
-    <p>“Neocore” = your new cognitive core. “Onespark” nods to that single spark of insight. “Brainput” highlights direct brain input.</p>
-  </details>
-</section>
-
+          <!-- Additional Q&A kept unchanged … -->
+          <details>
+            <summary><strong>9. How can headphones in my ears read brainwaves?</strong></summary>
+            <p>Brain signals spread across your entire head—including the ear canal. Mini EEG sensors in each earpiece pick up those patterns—no bulky headband needed.</p>
+          </details>
+          <details>
+            <summary><strong>10. Is it really rewriting content on the fly?</strong></summary>
+            <p>Yes—think of it as “smart remixing.” The AI trims, rephrases, or re‑orders segments so the story stays intact but the delivery matches your focus and mood.</p>
+          </details>
+          <details>
+            <summary><strong>11. What signals tell Neocore I’m zoning out?</strong></summary>
+            <p>Our models monitor attention‑related EEG markers (e.g., shifting alpha, theta, and beta patterns). When engagement dips, the AI steps in.</p>
+          </details>
+          <details>
+            <summary><strong>12. Will I notice when it tweaks the content?</strong></summary>
+            <p>Only if you want to. Keep it invisible or get a quick chime right before each adjustment.</p>
+          </details>
+          <details>
+            <summary><strong>13. Does it learn my habits over time?</strong></summary>
+            <p>Absolutely. Neocore builds a private, on‑device profile of your attention patterns, so its tweaks get smarter every session.</p>
+          </details>
+          <details>
+            <summary><strong>14. What do other users prefer—seamless or notified tweaks?</strong></summary>
+            <p>Early testers are split: some love full invisibility; others enjoy knowing when a tweak lands. Try both and see what fits you.</p>
+          </details>
+          <details>
+            <summary><strong>15. What’s up with the name “Onespark Brainput”?</strong></summary>
+            <p>“Neocore” = your new cognitive core. “Onespark” nods to that single spark of insight. “Brainput” highlights direct brain input.</p>
+          </details>
+        </section>
 
         <section id="updates" style="min-height:100px"><h2>Updates (Placeholder)</h2></section>
       </main>
 
-      <!-- Pricing sidebar -->
+      <!-- Pricing sidebar kept exactly as provided -->
       <aside class="pricing-sidebar">
         <div class="pricing-section">
           <div class="full-price-info">
@@ -289,18 +303,16 @@
           </div>
         </div>
       </aside>
-    </div>
-
+    </div><!-- /.campaign-body -->
   </div><!-- /.page-container -->
 
-  <!-- ── FOOTER ───────────────────────────────────────────────────────────── -->
+  <!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
   <footer>
-    Help bring creative projects to life. | © 2025 Your Company
+    your brain, your way. | © 2025 neocore L.L.C
   </footer>
 
-  <!-- ────────────────────────────────────────────────────────────────────────
-       MODALS
-  ------------------------------------------------------------------------- -->
+  <!-- ───────────────────────────────────────────────────────────────────────
+       MODALS (unchanged)                                                   -->
   <!-- Purchase OTP -->
   <div id="purchase-otp-modal" class="modal hidden">
     <div class="modal-content">
@@ -374,34 +386,32 @@
   </div>
 
   <!-- Order Success Modal -->
-<div id="order-success-modal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-modal" data-modal="order-success-modal">&times;</span>
-    <h3>Order Confirmation</h3>
-    <div id="order-success-details">
-      <p><strong>Thank you for your purchase!</strong></p>
-      <p>Your order has been confirmed. You will receive a confirmation email shortly.</p>
-      <div id="order-info-display"></div>
+  <div id="order-success-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="order-success-modal">&times;</span>
+      <h3>Order Confirmation</h3>
+      <div id="order-success-details">
+        <p><strong>Thank you for your purchase!</strong></p>
+        <p>Your order has been confirmed. You will receive a confirmation email shortly.</p>
+        <div id="order-info-display"></div>
+      </div>
+      <button id="order-success-close-btn">Close</button>
     </div>
-    <button id="order-success-close-btn">Close</button>
   </div>
-</div>
 
-<!-- Profile -->
-<div id="profile-modal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-modal" data-modal="profile-modal">&times;</span>
-    <h3>Your Profile</h3>
-    <div id="profile-contact-info">
-      <!-- This will be populated with all user contact info -->
+  <!-- Duplicate profile modal (kept exactly as was) -->
+  <div id="profile-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="profile-modal">&times;</span>
+      <h3>Your Profile</h3>
+      <div id="profile-contact-info"><!-- populated by JS --></div>
+      <h4>Order History</h4>
+      <ul id="order-history"></ul>
+      <button id="profile-close-btn">Close</button>
     </div>
-    <h4>Order History</h4>
-    <ul id="order-history"></ul>
-    <button id="profile-close-btn">Close</button>
   </div>
-</div>
 
-  <!-- Load external JavaScript -->
+  <!-- External JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>
