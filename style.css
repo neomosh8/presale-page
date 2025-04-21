@@ -898,6 +898,29 @@ footer {
     }
   }
 
+  .footer-branding {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .footer-slogan {
+    height: 24px;
+    width: auto;
+  }
+  
+  .footer-copyright {
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 600px) {
+    .footer-branding {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+
 /* ---------------------------------------------------------------------------
    Responsiveness
 --------------------------------------------------------------------------- */
