@@ -857,22 +857,46 @@ footer {
 #faq details p{margin:0;}
 
 
-.footer-links a {
-    margin-right: 16px;
-    text-decoration: none;
-    color: inherit;
-    font-weight: 500;
-  }
-  .footer-links a:last-child {
-    margin-right: 0;
-  }
-  footer {
+footer {
     padding: 24px;
     text-align: center;
-    font-size: 0.9rem;
-    color: #6b7280; /* gray‑500 */
   }
   
+  .footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .footer-links a {
+    color: var(--medium-gray);
+    transition: color 0.2s ease;
+  }
+  
+  .footer-links a:hover {
+    color: var(--primary-color);
+  }
+  
+  .footer-copyright {
+    margin: 0;
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 600px) {
+    .footer-container {
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
 
 /* ---------------------------------------------------------------------------
    Responsiveness
