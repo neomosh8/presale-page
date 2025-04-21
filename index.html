@@ -7,6 +7,13 @@
 
   <!-- External stylesheet -->
   <link rel="stylesheet" href="style.css"/>
+  <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  integrity="sha512-p6jwIXjK+XEcPSlLhMf7+q+6wzJGVZ6KzZt7lYpGgWzkDk4UuhqB1p1uZPv+5dFFQIdsWjY5iuvh0PZQY1r1cw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+  />
 
   <!-- Stripe.js -->
   <script src="https://js.stripe.com/v3"></script>
@@ -79,8 +86,10 @@
   <div class="page-container">
     <!-- ── TOP BAR (logo + profile) ─────────────────────────────────────── -->
     <div class="top-bar">
-      <img src="https://sitecontent.s3.us-east-1.amazonaws.com/neocore-logo_black.png"
-           alt="Neocore logo" class="site-logo">
+      <a href="https://neocore.co">
+        <img src="https://sitecontent.s3.us-east-1.amazonaws.com/neocore-logo_black.png"
+             alt="Neocore logo" class="site-logo">
+      </a>      
       <button id="login-button">My&nbsp;Profile</button>
     </div>
 
@@ -307,8 +316,20 @@
 
   <!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
   <footer>
-    your brain, your way. | © 2025 neocore L.L.C
+    <div class="footer-links">
+      <a href="https://x.com/neocore__" target="_blank" rel="noopener">
+        <i class="fab fa-x fa-lg"></i>
+      </a>
+      <a href="https://www.linkedin.com/company/neocore-brainputs/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin fa-lg"></i>
+      </a>
+      <a href="/terms">
+        <i class="fas fa-file-contract fa-lg"></i>
+      </a>
+    </div>
+    <p>your brain, your way. | © 2025 neocore L.L.C</p>
   </footer>
+  
 
   <!-- ───────────────────────────────────────────────────────────────────────
        MODALS (unchanged)                                                   -->

@@ -856,6 +856,24 @@ footer {
 /* Optional reset to keep answers tight but uniform */
 #faq details p{margin:0;}
 
+
+.footer-links a {
+    margin-right: 16px;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 500;
+  }
+  .footer-links a:last-child {
+    margin-right: 0;
+  }
+  footer {
+    padding: 24px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6b7280; /* gray‑500 */
+  }
+  
+
 /* ---------------------------------------------------------------------------
    Responsiveness
 --------------------------------------------------------------------------- */
