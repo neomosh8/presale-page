@@ -2,11 +2,11 @@
 const stripe = Stripe('pk_test_51RFlwmHJyDwFvydeuzhvAb1TkNCXqAf2iTy4uoRznLdV1VtprF4dehr0doKDKdxj8e7yftldkamwlvemhx5Zq6sh00ReTJfPfN');
 
 /* ── Pricing constants ────────────────────────────────────────────────── */
-const FULL_PRICE = 390;
-const DISCOUNT_PCT = 0.30;
-const DEPOSIT_PCT  = 0.30;
-const depositAmount   = FULL_PRICE * DEPOSIT_PCT;
-const discountedPrice = FULL_PRICE * (1 - DISCOUNT_PCT);
+const FULL_PRICE = 499;
+const DISCOUNT_PCT = 0.40;
+const DEPOSIT_PCT  = 49/FULL_PRICE; // Calculate the exact percentage
+const depositAmount = 49;
+const discountedPrice = 299;
 
 /* ── Global state ──────────────────────────────────────────────────────── */
 let currentPurchase = {
