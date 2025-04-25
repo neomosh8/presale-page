@@ -11,6 +11,7 @@
       crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="icon" href="https://neocore.co/wp-content/uploads/2025/01/cropped-512.png" type="image/x-icon">
   <link rel="shortcut icon" href="https://neocore.co/wp-content/uploads/2025/01/cropped-512.png" type="image/x-icon">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- Stripe.js -->
   <script src="https://js.stripe.com/v3"></script>
@@ -462,20 +463,60 @@
   </div>
 
   <!-- Login -->
-  <div id="login-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-modal" data-modal="login-modal">&times;</span>
-      <h3>Login / Profile</h3>
-      <label><input type="radio" name="login-contact-method" value="email" checked> Email</label>
-      <label><input type="radio" name="login-contact-method" value="sms"> Phone</label>
-      <input id="login-contact-value" type="email" placeholder="Enter email address" required>
-      <button id="login-send-otp-btn">Send OTP</button>
-      <div id="login-otp-section" style="display:none">
-        <input id="login-otp-code" placeholder="Enter OTP" required>
-        <button id="login-verify-otp-btn">Verify &amp; Load Profile</button>
+<div id="login-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" data-modal="login-modal">&times;</span>
+    <h3>Login / Profile</h3>
+    
+    <!-- Add Google Sign-In button -->
+    <div class="google-signin-container" style="text-align: center; margin-bottom: 20px;">
+      <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+         data-context="signin"
+         data-callback="handleGoogleSignIn"
+         data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="center">
       </div>
     </div>
+    
+    <div class="separator" style="display: flex; align-items: center; margin: 20px 0;">
+      <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
+      <span style="padding: 0 10px; color: #64748B; font-size: 0.9em;">or login with OTP</span>
+      <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
+    </div>
+    
+    <label><input type="radio" name="login-contact-method" value="email" checked> Email</label>
+    <label><input type="radio" name="login-contact-method" value="sms"> Phone</label>
+    <input id="login-contact-value" type="email" placeholder="Enter email address" required>
+    <button id="login-send-otp-btn">Send OTP</button>
+    <div id="login-otp-section" style="display:none">
+      <input id="login-otp-code" placeholder="Enter OTP" required>
+      <button id="login-verify-otp-btn">Verify &amp; Load Profile</button>
+    </div>
   </div>
+</div>
+
+<!-- Add a new modal for phone collection after Google login -->
+<div id="phone-collection-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" data-modal="phone-collection-modal">&times;</span>
+    <h3>Add Your Phone Number</h3>
+    <p style="margin-bottom: 20px;">Please add your phone number to complete your profile.</p>
+    <input id="google-user-phone" type="tel" placeholder="Enter phone number" required pattern="[0-9+\-\s()]{6,20}">
+    <button id="phone-send-otp-btn">Verify Phone Number</button>
+    <div id="phone-otp-section" style="display:none">
+      <input id="phone-otp-code" placeholder="Enter OTP" required>
+      <button id="phone-verify-otp-btn">Verify OTP</button>
+    </div>
+  </div>
+</div>
 
   <!-- Profile -->
   <div id="profile-modal" class="modal hidden">

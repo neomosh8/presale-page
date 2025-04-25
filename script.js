@@ -142,6 +142,9 @@ function closeModal(modalId) {
   } else if (modalId === 'login-modal') {
     document.getElementById('login-otp-section').style.display = 'none';
     document.getElementById('login-send-otp-btn').disabled = false;
+  } else if (modalId === 'phone-collection-modal') {
+    document.getElementById('phone-otp-section').style.display = 'none';
+    document.getElementById('phone-send-otp-btn').disabled = false;
   }
 }
 
@@ -329,6 +332,58 @@ function updateFormValidation() {
   } else {
     // If not logged in, add required attribute
     emailField.setAttribute('required', '');
+  }
+}
+
+/* --- Google Authentication --- */
+// Callback function for Google Sign-In
+function handleGoogleSignIn(response) {
+  const idToken = response.credential;
+  
+  // Send the ID token to your server
+  authenticateWithGoogle(idToken);
+}
+
+// Make this function available to the global scope for Google's callback
+window.handleGoogleSignIn = handleGoogleSignIn;
+
+async function authenticateWithGoogle(idToken) {
+  try {
+    const response = await fetch('/api/google-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Save authentication token
+    authToken = data.token;
+    localStorage.setItem('authToken', authToken);
+    
+    // Update current user
+    currentUser = data.user;
+    document.getElementById('login-button').textContent = 'My Profile';
+    document.getElementById('comment-form').classList.add('user-logged-in');
+    updateFormValidation();
+    
+    // Close login modal
+    closeModal('login-modal');
+    
+    // Check if phone number is needed
+    if (data.needsPhone) {
+      openModal('phone-collection-modal');
+    } else {
+      // Show profile
+      showProfileModal(data.user, data.orders);
+    }
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    alert('Error during Google authentication. Please try again.');
   }
 }
 
@@ -945,6 +1000,96 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (btn) btn.click();
       }
     });
+  });
+  
+  /* ----- Phone Collection After Google Login ----- */
+  // Send OTP to phone number after Google login
+  document.getElementById('phone-send-otp-btn').addEventListener('click', async () => {
+    const phoneNumber = document.getElementById('google-user-phone').value.trim();
+    
+    if (!phoneNumber) {
+      alert('Please enter your phone number.');
+      return;
+    }
+    
+    const btn = document.getElementById('phone-send-otp-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    if (await sendOtp('sms', phoneNumber)) {
+      document.getElementById('phone-otp-section').style.display = 'block';
+      btn.textContent = 'Resend OTP';
+      btn.disabled = false;
+    } else {
+      alert('Failed to send OTP. Please try again.');
+      btn.textContent = 'Verify Phone Number';
+      btn.disabled = false;
+    }
+  });
+  
+  // Verify phone OTP and update user profile
+  document.getElementById('phone-verify-otp-btn').addEventListener('click', async () => {
+    const phoneNumber = document.getElementById('google-user-phone').value.trim();
+    const code = document.getElementById('phone-otp-code').value.trim();
+    
+    if (!code) {
+      alert('Please enter the OTP code.');
+      return;
+    }
+    
+    document.getElementById('phone-verify-otp-btn').disabled = true;
+    document.getElementById('phone-verify-otp-btn').textContent = 'Verifying...';
+    
+    try {
+      if (await verifyOtp('sms', phoneNumber, code)) {
+        // Update user profile with phone number
+        const updatedUser = await updateUserProfile(
+          currentUser.contactMethod,
+          currentUser.contactValue,
+          { phone: phoneNumber }
+        );
+        
+        if (updatedUser) {
+          // Update current user
+          currentUser = {
+            ...currentUser,
+            phone: phoneNumber
+          };
+          
+          // Close phone collection modal
+          closeModal('phone-collection-modal');
+          
+          // Fetch latest user data and show profile
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              contactMethod: currentUser.contactMethod, 
+              contactValue: currentUser.contactValue
+            })
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            showProfileModal(data.user, data.orders);
+          } else {
+            showProfileModal(currentUser, []);
+          }
+          
+          alert('Phone number verified and added to your profile!');
+        } else {
+          throw new Error('Failed to update profile');
+        }
+      } else {
+        alert('Incorrect OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error('Phone verification error:', error);
+      alert('Error verifying phone number. Please try again.');
+    } finally {
+      document.getElementById('phone-verify-otp-btn').disabled = false;
+      document.getElementById('phone-verify-otp-btn').textContent = 'Verify OTP';
+    }
   });
   
   /* ----- Handle URL parameters for successful checkout ----- */
