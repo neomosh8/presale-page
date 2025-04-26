@@ -920,7 +920,52 @@ footer {
       gap: 8px;
     }
   }
+/* Add these styles to style.css */
 
+.spots-progress-container {
+    margin: 20px 0;
+  }
+  
+  .spots-progress-bar {
+    height: 6px;
+    background-color: #E5E7EB;
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  
+  .spots-progress-fill {
+    height: 100%;
+    background-color: #10B981; /* Green color */
+    border-radius: 3px;
+    width: 0%; /* Will be set dynamically with JavaScript */
+    transition: width 0.5s ease-in-out;
+  }
+  
+  .spots-counter {
+    font-size: 0.85em;
+    color: var(--medium-gray);
+    text-align: right;
+    margin: 0;
+  }
+  
+  /* Make counter text bold when spots are limited */
+  .spots-limited .spots-counter {
+    color: #EF4444;
+    font-weight: 600;
+  }
+  
+  /* Add a pulse animation for urgency when spots are running low */
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+  
+  .spots-limited .spots-progress-fill {
+    animation: pulse 2s infinite;
+  }
 /* ---------------------------------------------------------------------------
    Responsiveness
 --------------------------------------------------------------------------- */

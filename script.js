@@ -201,7 +201,9 @@ const DISCOUNT_PCT = 0.40;
 const DEPOSIT_PCT  = 49/FULL_PRICE; // Calculate the exact percentage
 const depositAmount = 49;
 const discountedPrice = 299;
-
+let purchasedSpots = parseInt(localStorage.getItem('purchasedSpots') || '0');
+// We'll populate this with environment variable later
+let MAX_SPOTS = 10;
 /* ── Global state ──────────────────────────────────────────────────────── */
 let currentPurchase = {
   amount: 0,
@@ -618,6 +620,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
   const buyNowDisp = document.getElementById('buy-now-price-display');
   buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
+
+
+// Fetch max spots environment variable
+fetch('/api/get-config')
+  .then(response => response.json())
+  .then(data => {
+    if (data.MAX_SPOTS) {
+      MAX_SPOTS = parseInt(data.MAX_SPOTS);
+      updateSpotsProgress();
+    }
+  })
+  .catch(error => {
+    console.error('Error fetching configuration:', error);
+  });
+
+// Function to update spots progress bar
+function updateSpotsProgress() {
+  const progressFill = document.getElementById('spots-progress-fill');
+  const spotsCounter = document.getElementById('spots-counter');
+  const spotsAvailableElement = document.getElementById('spots-available');
+  const spotsTotalElement = document.getElementById('spots-total');
+  const spotsContainer = document.querySelector('.spots-progress-container');
+  
+  if (!progressFill || !spotsAvailableElement || !spotsTotalElement) return;
+  
+  const spotsAvailable = MAX_SPOTS - purchasedSpots;
+  
+  // Calculate percentage filled
+  const percentFilled = (purchasedSpots / MAX_SPOTS) * 100;
+  
+  // Update the progress bar fill width
+  progressFill.style.width = `${percentFilled}%`;
+  
+  // Update text counter
+  spotsAvailableElement.textContent = spotsAvailable;
+  spotsTotalElement.textContent = MAX_SPOTS;
+  
+  // Add urgency styling when less than 30% spots remain
+  if (spotsAvailable <= MAX_SPOTS * 0.3) {
+    spotsContainer.classList.add('spots-limited');
+  } else {
+    spotsContainer.classList.remove('spots-limited');
+  }
+  
+  // Disable button if no spots available
+  const buyNowButton = document.getElementById('buy-now-button');
+  if (spotsAvailable <= 0 && buyNowButton) {
+    buyNowButton.disabled = true;
+    buyNowButton.textContent = 'Sold Out';
+    document.querySelector('.option-card:last-child').classList.add('sold-out');
+  }
+}
+
+// Initialize spots progress
+updateSpotsProgress();
+
 
   /* ----- Check for stored authentication ----- */
   await checkStoredAuth();
@@ -1318,7 +1376,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
       
       document.getElementById('order-info-display').innerHTML = orderInfoHtml;
+      const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
+      if (pendingOrder && pendingOrder.amount === discountedPrice) {
+        purchasedSpots++;
+        localStorage.setItem('purchasedSpots', purchasedSpots.toString());
+        updateSpotsProgress();
+      }
     }
+    }
+    
     
     // Clear pending order from localStorage
     localStorage.removeItem('pendingOrder');
