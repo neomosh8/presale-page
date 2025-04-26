@@ -648,12 +648,6 @@ function updateSpotsProgress() {
   const spotsTotalElement = document.getElementById('spots-total');
   const spotsContainer = document.querySelector('.spots-progress-container');
   
-  // Debug missing elements
-  if (!progressFill) console.error('Progress fill element not found!');
-  if (!spotsAvailableElement) console.error('Spots available element not found!');
-  if (!spotsTotalElement) console.error('Spots total element not found!');
-  if (!spotsContainer) console.error('Spots container not found!');
-  
   // If any element is missing, exit early
   if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
     console.error('Required elements for progress bar not found. Check your HTML.');
@@ -689,31 +683,63 @@ function updateSpotsProgress() {
   }
 }
 
-// Get configuration, with fallback
-function initializeSpots() {
-  console.log('Initializing spots...');
+// Get configuration and purchase count from server
+async function initializeSpots() {
+  console.log('Initializing spots from server...');
   
-  // Try to get max spots from the API
-  fetch('/api/get-config')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Config data received:', data);
-      if (data.MAX_SPOTS) {
-        MAX_SPOTS = parseInt(data.MAX_SPOTS);
-      }
-      updateSpotsProgress();
-    })
-    .catch(error => {
-      console.error('Error fetching configuration:', error);
-      // Even if the API fails, still update the progress bar with default values
-      updateSpotsProgress();
-    });
+  try {
+    // Fetch the actual purchase count from the server
+    const response = await fetch('/api/purchase-count');
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Server data received:', data);
+    
+    // Update global variables
+    if (data.maxSpots) {
+      MAX_SPOTS = parseInt(data.maxSpots);
+    }
+    
+    // Important: Update the purchasedSpots variable with the actual server count
+    // Only use localStorage if the server count is lower (to handle new purchases)
+    const storedCount = parseInt(localStorage.getItem('purchasedSpots') || '0');
+    purchasedSpots = Math.max(data.count, storedCount);
+    
+    // Update localStorage to match
+    localStorage.setItem('purchasedSpots', purchasedSpots.toString());
+    
+    // Update the UI
+    updateSpotsProgress();
+  } catch (error) {
+    console.error('Error fetching data from server:', error);
+    // Fall back to localStorage if server fetch fails
+    updateSpotsProgress();
+  }
 }
+
+// Add a function to check if elements exist and try again if not
+function ensureProgressBarInit() {
+  const required = [
+    document.getElementById('spots-progress-fill'),
+    document.getElementById('spots-available'),
+    document.getElementById('spots-total'),
+    document.querySelector('.spots-progress-container')
+  ];
+  
+  if (required.every(el => el)) {
+    console.log('All progress bar elements found, initializing from server...');
+    initializeSpots();
+  } else {
+    console.log('Progress bar elements not found, will retry in 500ms...');
+    setTimeout(ensureProgressBarInit, 500);
+  }
+}
+
+// Start initialization process
+ensureProgressBarInit();
 
 // Add a function to check if elements exist and try again if not
 function ensureProgressBarInit() {
