@@ -1357,48 +1357,47 @@ updateSpotsProgress();
     }
   });
   
-  /* ----- Handle URL parameters for successful checkout ----- */
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('success') === 'true') {
-    // Get stored order information
-    const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
+/* ----- Handle URL parameters for successful checkout ----- */
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('success') === 'true') {
+  // Get stored order information
+  const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
+  
+  // Display order information in the modal
+  if (pendingOrder.amount) {
+    const orderInfoHtml = `
+      <div class="order-success-info" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
+        <p><strong>Order ID:</strong> <span id="success-order-id">${pendingOrder.id || 'order_' + Date.now()}</span></p>
+        <p><strong>Amount Paid:</strong> $${pendingOrder.amount.toFixed(2)}</p>
+        <p><strong>Contact:</strong> ${pendingOrder.contactValue}</p>
+        <p><strong>Shipping Address:</strong> ${pendingOrder.shipping.address}, ${pendingOrder.shipping.city}, ${pendingOrder.shipping.country}</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+      </div>
+    `;
     
-    // Display order information in the modal
-    if (pendingOrder.amount) {
-      const orderInfoHtml = `
-        <div class="order-success-info" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
-          <p><strong>Order ID:</strong> <span id="success-order-id">${pendingOrder.id || 'order_' + Date.now()}</span></p>
-          <p><strong>Amount Paid:</strong> $${pendingOrder.amount.toFixed(2)}</p>
-          <p><strong>Contact:</strong> ${pendingOrder.contactValue}</p>
-          <p><strong>Shipping Address:</strong> ${pendingOrder.shipping.address}, ${pendingOrder.shipping.city}, ${pendingOrder.shipping.country}</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-        </div>
-      `;
-      
-      document.getElementById('order-info-display').innerHTML = orderInfoHtml;
-      const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
-      if (pendingOrder && pendingOrder.amount === discountedPrice) {
-        purchasedSpots++;
-        localStorage.setItem('purchasedSpots', purchasedSpots.toString());
-        updateSpotsProgress();
-      }
+    document.getElementById('order-info-display').innerHTML = orderInfoHtml;
+    
+    // Update purchased spots if it was a "Buy Now" purchase
+    if (pendingOrder.amount === discountedPrice) {
+      purchasedSpots++;
+      localStorage.setItem('purchasedSpots', purchasedSpots.toString());
+      updateSpotsProgress();
     }
-    }
-    
-    
-    // Clear pending order from localStorage
-    localStorage.removeItem('pendingOrder');
-    
-    // Show success modal instead of alert
-    openModal('order-success-modal');
-    
-    // Add event listener for the close button if it doesn't exist yet
-    if (!document.getElementById('order-success-close-btn').onclick) {
-      document.getElementById('order-success-close-btn').addEventListener('click', () => {
-        closeModal('order-success-modal');
-      });
-    }
-  } else if (urlParams.get('canceled') === 'true') {
-    showToast('Your order was canceled. If you need assistance, please contact us.', 'warning');
   }
+  
+  // Clear pending order from localStorage
+  localStorage.removeItem('pendingOrder');
+  
+  // Show success modal instead of alert
+  openModal('order-success-modal');
+  
+  // Add event listener for the close button if it doesn't exist yet
+  if (!document.getElementById('order-success-close-btn').onclick) {
+    document.getElementById('order-success-close-btn').addEventListener('click', () => {
+      closeModal('order-success-modal');
+    });
+  }
+} else if (urlParams.get('canceled') === 'true') {
+  showToast('Your order was canceled. If you need assistance, please contact us.', 'warning');
+}
 });
