@@ -253,7 +253,7 @@ body {
 }
 
 .campaign-content img {
-    max-width: 60%;
+    max-width: 88%;
     height: auto;
     border-radius: var(--border-radius-md);
     margin: 25px 0;
