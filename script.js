@@ -636,19 +636,35 @@ fetch('/api/get-config')
   });
 
 // Function to update spots progress bar
+// Add this to the bottom of your DOMContentLoaded event listener
+// after all the other code but before the closing brackets
+
+// Enhanced version of updateSpotsProgress that includes debugging
 function updateSpotsProgress() {
+  console.log('Updating spots progress, MAX_SPOTS:', MAX_SPOTS, 'purchasedSpots:', purchasedSpots);
+  
   const progressFill = document.getElementById('spots-progress-fill');
-  const spotsCounter = document.getElementById('spots-counter');
   const spotsAvailableElement = document.getElementById('spots-available');
   const spotsTotalElement = document.getElementById('spots-total');
   const spotsContainer = document.querySelector('.spots-progress-container');
   
-  if (!progressFill || !spotsAvailableElement || !spotsTotalElement) return;
+  // Debug missing elements
+  if (!progressFill) console.error('Progress fill element not found!');
+  if (!spotsAvailableElement) console.error('Spots available element not found!');
+  if (!spotsTotalElement) console.error('Spots total element not found!');
+  if (!spotsContainer) console.error('Spots container not found!');
+  
+  // If any element is missing, exit early
+  if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
+    console.error('Required elements for progress bar not found. Check your HTML.');
+    return;
+  }
   
   const spotsAvailable = MAX_SPOTS - purchasedSpots;
   
   // Calculate percentage filled
   const percentFilled = (purchasedSpots / MAX_SPOTS) * 100;
+  console.log('Percent filled:', percentFilled + '%');
   
   // Update the progress bar fill width
   progressFill.style.width = `${percentFilled}%`;
@@ -673,8 +689,52 @@ function updateSpotsProgress() {
   }
 }
 
-// Initialize spots progress
-updateSpotsProgress();
+// Get configuration, with fallback
+function initializeSpots() {
+  console.log('Initializing spots...');
+  
+  // Try to get max spots from the API
+  fetch('/api/get-config')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Config data received:', data);
+      if (data.MAX_SPOTS) {
+        MAX_SPOTS = parseInt(data.MAX_SPOTS);
+      }
+      updateSpotsProgress();
+    })
+    .catch(error => {
+      console.error('Error fetching configuration:', error);
+      // Even if the API fails, still update the progress bar with default values
+      updateSpotsProgress();
+    });
+}
+
+// Add a function to check if elements exist and try again if not
+function ensureProgressBarInit() {
+  const required = [
+    document.getElementById('spots-progress-fill'),
+    document.getElementById('spots-available'),
+    document.getElementById('spots-total'),
+    document.querySelector('.spots-progress-container')
+  ];
+  
+  if (required.every(el => el)) {
+    console.log('All progress bar elements found, initializing...');
+    initializeSpots();
+  } else {
+    console.log('Progress bar elements not found, will retry in 500ms...');
+    setTimeout(ensureProgressBarInit, 500);
+  }
+}
+
+// Start initialization process
+ensureProgressBarInit();
 
 
   /* ----- Check for stored authentication ----- */
