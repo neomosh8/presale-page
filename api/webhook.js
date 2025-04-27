@@ -76,6 +76,7 @@ export default async function handler(req, res) {
         await sgMail.send({
           to: recipientEmail,
           from: process.env.SENDGRID_FROM_EMAIL,
+          subject: "Your OneSpark Order Confirmation", 
           template_id: process.env.SENDGRID_ORDER_TEMPLATE_ID,
           dynamic_template_data: {
             order_id: order.id,
@@ -89,9 +90,9 @@ export default async function handler(req, res) {
             email: recipientEmail,
             items: [
               {
-                name: "Awesome Product",
+                name: "OneSpark",
                 price: `$${order.amount.toFixed(2)}`,
-                image_url: "https://via.placeholder.com/100x100"
+                image_url: "https://sitecontent.s3.us-east-1.amazonaws.com/Neocore_onespark_shop.png"
               }
             ]
           }
