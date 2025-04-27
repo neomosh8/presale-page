@@ -193,7 +193,7 @@ function addToastStyles() {
 }
 
 /* ── Stripe object ────────────────────────────────────────────────────── */
-const stripe = Stripe('pk_test_51RFlwmHJyDwFvydeuzhvAb1TkNCXqAf2iTy4uoRznLdV1VtprF4dehr0doKDKdxj8e7yftldkamwlvemhx5Zq6sh00ReTJfPfN');
+const stripe = Stripe('pk_live_51RFlwdHHD8eaYRObFGNzYCnpYOTPGcpFPzwhxePgl0xDVSm6HOnFxQk5vr8Cp2oArwk2UYH0Ro7Pnqh6g98boWiN00gWz3IIo5');
 
 /* ── Pricing constants ────────────────────────────────────────────────── */
 const FULL_PRICE = 499;
