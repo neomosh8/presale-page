@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       line_items: [{
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Awesome Product Pre‑Order' },
+          product_data: { name: 'neocore OneSpark' },
           unit_amount: Math.round(amount * 100),
         },
         quantity: 1
