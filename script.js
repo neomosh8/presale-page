@@ -590,7 +590,7 @@ async function authenticateWithGoogle(idToken) {
 function trackTwitterConversion(orderValue, email) {
   if (typeof twq !== 'function') return;
   
-  twq('event', 'tw-pmtpc-pmtrk', {
+  twq('event', 'tw-pmtpc-pmtpd', {
     value: orderValue, 
     email_address: email
   });
