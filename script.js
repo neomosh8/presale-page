@@ -586,6 +586,16 @@ async function authenticateWithGoogle(idToken) {
   }
 }
 
+// Twitter conversion tracking function
+function trackTwitterConversion(orderValue, email) {
+  if (typeof twq !== 'function') return;
+  
+  twq('event', 'tw-pmtpc-pmtrk', {
+    value: orderValue, 
+    email_address: email
+  });
+}
+
 /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize toast notification system
@@ -1469,6 +1479,9 @@ if (urlParams.get('success') === 'true') {
       localStorage.setItem('purchasedSpots', purchasedSpots.toString());
       updateSpotsProgress();
     }
+  }
+  if (pendingOrder.contactValue) {
+    trackTwitterConversion(pendingOrder.amount, pendingOrder.contactValue);
   }
   
   // Clear pending order from localStorage
