@@ -24,10 +24,7 @@
 
   // Wait for DOM to be fully loaded
   document.addEventListener('DOMContentLoaded', function() {
-    // Enable debug mode for GA
-    if (typeof gtag === 'function') {
-      gtag('config', 'G-1TL7358Y9R', { 'debug_mode': true });
-    }
+
     
     // Target the main campaign video
     const campaignVideo = document.querySelector('.product-video video');
