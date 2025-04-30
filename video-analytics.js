@@ -7,7 +7,7 @@
  * - Viewing heatmap data
  * - Session tracking
  * 
- * Integrates with Google Analytics 4 (GA4)
+ * Integrates with Google Analytics 4 (GA4) and Reddit Pixel
  */
 
 // Self-executing function to avoid polluting global namespace
@@ -24,7 +24,6 @@
 
   // Wait for DOM to be fully loaded
   document.addEventListener('DOMContentLoaded', function() {
-
     
     // Target the main campaign video
     const campaignVideo = document.querySelector('.product-video video');
@@ -53,6 +52,28 @@
       lastPlayheadPosition: 0,
       playbackRate: 1
     };
+    
+    // Function to track video start in Reddit Pixel
+    function trackRedditVideoStart(videoTitle) {
+      if (window.rdt && typeof window.rdt === 'function') {
+        rdt('track', 'ViewContent', {
+          content_type: 'video_start',
+          content_name: videoTitle || 'OneSpark Product Video'
+        });
+        console.log('Reddit Pixel: Video start event tracked');
+      }
+    }
+
+    // Function to track video completion in Reddit Pixel
+    function trackRedditVideoComplete(videoTitle) {
+      if (window.rdt && typeof window.rdt === 'function') {
+        rdt('track', 'ViewContent', {
+          content_type: 'video_complete',
+          content_name: videoTitle || 'OneSpark Product Video'
+        });
+        console.log('Reddit Pixel: Video complete event tracked');
+      }
+    }
     
     // Helper function: Get current chapter based on timestamp
     function getCurrentChapter(currentTime) {
@@ -101,6 +122,9 @@
           'current_chapter': currentChapter.name,
           'session_id': trackingState.sessionId
         });
+        
+        // Track video start with Reddit Pixel
+        trackRedditVideoStart(trackingState.videoTitle);
         
         // Also count as a general video view
         gtag('event', 'video_view', {
@@ -307,6 +331,9 @@
           'completion_rate': (completedChapters.length / videoChapters.length).toFixed(2),
           'session_id': trackingState.sessionId
         });
+        
+        // Track video completion with Reddit Pixel
+        trackRedditVideoComplete(trackingState.videoTitle);
       }
     });
     
