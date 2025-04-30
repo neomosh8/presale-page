@@ -197,10 +197,13 @@ const stripe = Stripe('pk_live_51RFlwdHHD8eaYRObFGNzYCnpYOTPGcpFPzwhxePgl0xDVSm6
 
 /* ── Pricing constants ────────────────────────────────────────────────── */
 const FULL_PRICE = 499;
-const DISCOUNT_PCT = 0.40;
-const DEPOSIT_PCT  = 49/FULL_PRICE; // Calculate the exact percentage
+const DISCOUNT_PCT = 0.40;  // 40% discount for full payment
+const EARLY_BIRD_PCT = 0.30; // 30% discount for deposit option
+const DEPOSIT_PCT = 49/349; // Calculate the exact percentage for deposit
 const depositAmount = 49;
 const discountedPrice = 299;
+const earlyBirdTotal = 349; // Total price after 30% discount
+const earlyBirdRemaining = earlyBirdTotal - depositAmount; // Amount to pay later ($300)
 let purchasedSpots = parseInt(localStorage.getItem('purchasedSpots') || '0');
 // We'll populate this with environment variable later
 let MAX_SPOTS = 10;
@@ -626,7 +629,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
   document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
   document.getElementById('deposit-description').innerHTML = 
-    "Secure your OneSpark now! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today and the remaining <strong>" + formatCurrency(FULL_PRICE-depositAmount) + "</strong> upon shipment (Q4 2025).";
+  "Get the Early Bird discount! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today and just <strong>" + formatCurrency(349-depositAmount) + "</strong> later when your OneSpark ships in Q4 2025. That's a total of <strong>$349</strong> - a 30% savings off the retail price!";
   document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
   const buyNowDisp = document.getElementById('buy-now-price-display');
   buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
