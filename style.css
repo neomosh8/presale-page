@@ -970,40 +970,58 @@ footer {
   .demo-button-container {
     text-align: center;
     margin: -1px 0 30px 0;
-    background-color: var(--white);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     padding: 15px 0;
-    border: 1px solid var(--light-gray);
+    border: 1px solid rgba(230, 230, 230, 0.6);
     border-top: none;
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-soft);
   }
   
   .demo-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    background-color: var(--primary-color);
-    color: var(--white);
-    border: none;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--primary-color);
+    border: 1px solid rgba(255, 255, 255, 0.7);
     border-radius: var(--border-radius-md);
     font-size: 1.1em;
     font-weight: 600;
-    padding: 12px 22px;
+    padding: 12px 24px;
     cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .demo-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+    z-index: -1;
   }
   
   .demo-button:hover {
-    background-color: var(--primary-color-darker);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px var(--primary-color-glow);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+    border-color: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color-darker);
   }
   
   .demo-button:active {
     transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 5px var(--primary-color-glow);
   }
   
   .demo-button i {
