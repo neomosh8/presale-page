@@ -601,6 +601,40 @@ function trackTwitterConversion(orderValue, email) {
 
 /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
+
+  const videoSection = document.querySelector('.product-video');
+  const video = document.querySelector('.product-video video');
+  
+  if (!videoSection || !video) return;
+  
+  // Create a container for the button
+  const buttonContainer = document.createElement('div');
+  buttonContainer.className = 'demo-button-container';
+  
+  // Create the button
+  const demoButton = document.createElement('button');
+  demoButton.className = 'demo-button';
+  demoButton.innerHTML = '<i class="fas fa-play-circle"></i> Watch Product Demo';
+  
+  // Add the button to the container
+  buttonContainer.appendChild(demoButton);
+  
+  // Insert the container after the video section
+  videoSection.parentNode.insertBefore(buttonContainer, videoSection.nextSibling);
+  
+  // Add click event listener to the button
+  demoButton.addEventListener('click', function() {
+    // The demo chapter starts at 30 seconds based on your video-analytics.js
+    video.currentTime = 30;
+    
+    // Make sure video is playing
+    video.play().catch(error => {
+      console.error('Error playing video:', error);
+    });
+    
+    // Scroll to ensure video is visible
+    videoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   // Initialize toast notification system
   addToastStyles();
 
