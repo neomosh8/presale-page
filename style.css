@@ -977,55 +977,75 @@ footer {
     border: 1px solid rgba(230, 230, 230, 0.6);
     border-top: none;
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
-    box-shadow: var(--shadow-soft);
+    position: relative;
+  }
+  
+  /* Video timeline connector */
+  .demo-button-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 10px;
+    background: rgba(37, 99, 235, 0.3);
   }
   
   .demo-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--primary-color);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    border-radius: var(--border-radius-md);
-    font-size: 1.1em;
-    font-weight: 600;
-    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--secondary-color);
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    padding: 10px 22px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15);
+    transition: all 0.4s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     position: relative;
     overflow: hidden;
   }
   
+  /* Animated border effect */
   .demo-button::before {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.4) 0%,
-      rgba(255, 255, 255, 0.1) 100%
+      90deg,
+      transparent,
+      rgba(37, 99, 235, 0.2),
+      transparent
     );
-    z-index: -1;
+    animation: borderShimmer 4s infinite linear;
+  }
+  
+  @keyframes borderShimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
   }
   
   .demo-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-    border-color: rgba(255, 255, 255, 0.9);
-    color: var(--primary-color-darker);
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    border-color: rgba(37, 99, 235, 0.15);
   }
   
   .demo-button:active {
-    transform: translateY(0) scale(0.98);
-  }
-  
-  .demo-button i {
-    font-size: 1.2em;
+    transform: translateY(1px);
   }
 /* ---------------------------------------------------------------------------
    Responsiveness

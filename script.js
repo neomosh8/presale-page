@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Create the button
   const demoButton = document.createElement('button');
   demoButton.className = 'demo-button';
-  demoButton.innerHTML = '<i class="fas fa-play-circle"></i> Watch Product Demo';
+  demoButton.textContent = 'Skip to product demo';
   
   // Add the button to the container
   buttonContainer.appendChild(demoButton);
