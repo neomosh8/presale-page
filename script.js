@@ -1652,13 +1652,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (mcForm) {
     // Add client-side validation
     mcForm.addEventListener('submit', function(event) {
+      // Prevent the default form submission
+      event.preventDefault();
+      
       const emailInput = document.getElementById('mce-EMAIL');
       const emailValue = emailInput.value.trim();
       
       // Simple email validation
       if (!validateEmail(emailValue)) {
-        event.preventDefault();
-        
         // Show error message
         const errorResponse = document.getElementById('mce-error-response');
         if (errorResponse) {
@@ -1674,6 +1675,83 @@ document.addEventListener('DOMContentLoaded', function() {
         // Focus back on the input
         emailInput.focus();
       } else {
+        // Get the form data
+        const formData = new FormData(mcForm);
+        
+        // Convert form action URL to JSON endpoint
+        let url = mcForm.getAttribute('action').replace('/post?', '/post-json?');
+        
+        // Add callback parameter for JSONP
+        if (!url.includes('c=')) {
+          url += '&c=?';
+        }
+        
+        // Show loading state
+        const submitButton = document.getElementById('mc-embedded-subscribe');
+        const originalButtonText = submitButton.textContent;
+        submitButton.textContent = 'Subscribing...';
+        submitButton.disabled = true;
+        
+        // Use JSONP to submit the form (Mailchimp API requirement)
+        const script = document.createElement('script');
+        script.src = url + '&' + new URLSearchParams(formData).toString();
+        
+        // Define callback function
+        window.mailchimpCallback = function(response) {
+          submitButton.textContent = originalButtonText;
+          submitButton.disabled = false;
+          
+          if (response.result === 'success') {
+            // Show success toast
+            if (typeof showToast === 'function') {
+              showToast('Thank you for subscribing to our updates!', 'success', 5000);
+            }
+            
+            // Show success message in form
+            const successResponse = document.getElementById('mce-success-response');
+            if (successResponse) {
+              successResponse.textContent = 'Thank you for subscribing!';
+              successResponse.style.display = 'block';
+              
+              // Hide success message after 5 seconds
+              setTimeout(() => {
+                successResponse.style.display = 'none';
+              }, 5000);
+            }
+            
+            // Clear the input
+            emailInput.value = '';
+          } else {
+            // Show error
+            const errorResponse = document.getElementById('mce-error-response');
+            if (errorResponse) {
+              // Extract error message from response
+              const errorMessage = response.msg || 'An error occurred. Please try again.';
+              errorResponse.innerHTML = errorMessage;
+              errorResponse.style.display = 'block';
+              
+              // Hide error message after 5 seconds
+              setTimeout(() => {
+                errorResponse.style.display = 'none';
+              }, 5000);
+            }
+            
+            // Show error toast
+            if (typeof showToast === 'function') {
+              showToast('Subscription error: ' + response.msg, 'error', 5000);
+            }
+          }
+          
+          // Remove the script tag
+          document.body.removeChild(script);
+        };
+        
+        // Add callback parameter to URL
+        script.src = script.src.replace('c=?', 'c=mailchimpCallback');
+        
+        // Add script to document to execute the request
+        document.body.appendChild(script);
+        
         // Track signup attempt with analytics
         if (typeof gtag === 'function') {
           gtag('event', 'newsletter_signup', {
@@ -1681,48 +1759,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'event_label': 'Email Updates Form'
           });
         }
-        
-        // Also track with Toast notification
-        if (typeof showToast === 'function') {
-          // Use a timeout to allow the form to submit
-          setTimeout(() => {
-            showToast('Thank you for subscribing to our updates!', 'success', 5000);
-          }, 100);
-        }
-        
-        // If you want to handle form submission via AJAX instead of page redirect
-        // Uncomment this section:
-        /*
-        event.preventDefault();
-        
-        // Get the form data
-        const formData = new FormData(mcForm);
-        const url = mcForm.getAttribute('action').replace('/post?', '/post-json?') + '&c=?';
-        
-        // Convert formData to URL params
-        const params = new URLSearchParams(formData);
-        
-        // Use fetch to submit the form
-        fetch(url, {
-          method: 'POST',
-          body: params,
-          mode: 'no-cors'
-        })
-        .then(response => {
-          // Show success message
-          const successResponse = document.getElementById('mce-success-response');
-          if (successResponse) {
-            successResponse.textContent = 'Thank you for subscribing!';
-            successResponse.style.display = 'block';
-            
-            // Clear the input
-            emailInput.value = '';
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-        */
       }
     });
     
