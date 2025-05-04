@@ -1537,3 +1537,90 @@ if (urlParams.get('success') === 'true') {
   showToast('Your order was canceled. If you need assistance, please contact us.', 'warning');
 }
 });
+
+// Countdown Timer Logic
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if countdown elements exist
+  if (!document.getElementById('top-days') || !document.getElementById('card-days')) {
+    return; // Exit if the elements don't exist
+  }
+  
+  // Set end date to 3 days from now
+  const now = new Date();
+  const endDate = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
+  
+  // Update the countdown every second
+  function updateCountdown() {
+    const currentTime = new Date();
+    const difference = endDate - currentTime;
+    
+    if (difference <= 0) {
+      // Sale has ended
+      document.querySelectorAll('.countdown-value, .card-countdown-value').forEach(el => {
+        el.textContent = '00';
+      });
+      
+      // Change the button to "Offer Expired"
+      const button = document.getElementById('flash-deal-button');
+      if (button) {
+        button.textContent = 'Offer Expired';
+        button.disabled = true;
+        button.style.opacity = '0.7';
+        button.style.cursor = 'not-allowed';
+      }
+      
+      return;
+    }
+    
+    // Calculate days, hours, minutes, seconds
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+    
+    // Format with leading zeros
+    const formattedDays = days.toString().padStart(2, '0');
+    const formattedHours = hours.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const formattedSeconds = seconds.toString().padStart(2, '0');
+    
+    // Update top bar countdown
+    document.getElementById('top-days').textContent = formattedDays;
+    document.getElementById('top-hours').textContent = formattedHours;
+    document.getElementById('top-minutes').textContent = formattedMinutes;
+    document.getElementById('top-seconds').textContent = formattedSeconds;
+    
+    // Update card countdown
+    document.getElementById('card-days').textContent = formattedDays;
+    document.getElementById('card-hours').textContent = formattedHours;
+    document.getElementById('card-minutes').textContent = formattedMinutes;
+    document.getElementById('card-seconds').textContent = formattedSeconds;
+  }
+  
+  // Initial call
+  updateCountdown();
+  
+  // Update every second
+  setInterval(updateCountdown, 1000);
+  
+  // Flash Deal Button Functionality
+  const flashDealButton = document.getElementById('flash-deal-button');
+  if (flashDealButton) {
+    flashDealButton.addEventListener('click', () => {
+      // Set the purchase amount to $99
+      currentPurchase.amount = 99;
+      
+      // If user is already logged in, skip to shipping
+      if (currentUser) {
+        currentPurchase.contactMethod = currentUser.contactMethod;
+        currentPurchase.contactValue = currentUser.contactValue;
+        openModal('shipping-modal');
+        
+        // Pre-populate shipping form with user information
+        populateShippingForm(currentUser);
+      } else {
+        openModal('purchase-otp-modal');
+      }
+    });
+  }
+});
