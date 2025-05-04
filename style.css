@@ -1048,8 +1048,8 @@ footer {
     transform: translateY(1px);
   }
 
-      /* Limited Time Notification Bar */
-      .limited-time-bar {
+    /* Limited Time Notification Bar */
+    .limited-time-bar {
         background: linear-gradient(90deg, #FCD34D 0%, #FBBF24 50%, #F59E0B 100%);
         color: #7C2D12;
         text-align: center;
@@ -1073,7 +1073,9 @@ footer {
       
       /* Super Deal Price Card */
       .option-card.super-deal {
-        background: linear-gradient(135deg, #FDBA74 0%, #FB923C 30%, #F97316 70%, #FF8A65 100%);
+        background-image: url('https://sitecontent.s3.us-east-1.amazonaws.com/image_card.jpg');
+        background-size: cover;
+        background-position: center;
         border: none;
         position: relative;
         box-shadow: 0 15px 30px rgba(249, 115, 22, 0.3);
@@ -1096,7 +1098,7 @@ footer {
         content: '';
         position: absolute;
         inset: -2px;
-        background: linear-gradient(135deg, #FDBA74 0%, #FB923C 30%, #F97316 70%, #FF8A65 100%);
+        background-color: rgba(249, 115, 22, 0.5);
         z-index: -1;
         border-radius: inherit;
         filter: blur(10px);
@@ -1146,14 +1148,7 @@ footer {
         font-weight: 800;
         color: white;
         display: inline-block;
-        animation: throb 2s infinite;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-      
-      @keyframes throb {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
       }
       
       .super-deal h3 {
