@@ -1538,16 +1538,35 @@ if (urlParams.get('success') === 'true') {
 }
 });
 
-// Countdown Timer Logic
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if countdown elements exist
-  if (!document.getElementById('top-days') || !document.getElementById('card-days')) {
-    return; // Exit if the elements don't exist
+  // Set a fixed end date (May 7, 2025 at midnight UTC)
+  // You can change this to any date you want
+  const endDate = new Date('2025-05-07T00:00:00Z');
+  
+  // Function to check if the sale has already ended
+  function hasSaleEnded() {
+    const now = new Date();
+    return now >= endDate;
   }
   
-  // Set end date to 3 days from now
-  const now = new Date();
-  const endDate = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
+  // If the sale has already ended, show "Expired" state
+  if (hasSaleEnded()) {
+    // Update all countdown displays to zero
+    document.querySelectorAll('.countdown-value, .card-countdown-value').forEach(el => {
+      el.textContent = '00';
+    });
+    
+    // Change the button to "Offer Expired"
+    const button = document.querySelector('.super-deal .btn');
+    if (button) {
+      button.textContent = 'Offer Expired';
+      button.disabled = true;
+      button.style.opacity = '0.7';
+      button.style.cursor = 'not-allowed';
+    }
+    
+    return; // Exit early
+  }
   
   // Update the countdown every second
   function updateCountdown() {
@@ -1561,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // Change the button to "Offer Expired"
-      const button = document.getElementById('flash-deal-button');
+      const button = document.querySelector('.super-deal .btn');
       if (button) {
         button.textContent = 'Offer Expired';
         button.disabled = true;
@@ -1603,7 +1622,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update every second
   setInterval(updateCountdown, 1000);
   
-  // Flash Deal Button Functionality
+  // Flash Deal Button Functionality (ensure this is accessible)
   const flashDealButton = document.getElementById('flash-deal-button');
   if (flashDealButton) {
     flashDealButton.addEventListener('click', () => {
