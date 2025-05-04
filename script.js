@@ -1606,6 +1606,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Flash Deal Button Functionality
   const flashDealButton = document.getElementById('flash-deal-button');
   if (flashDealButton) {
+    flashDealButton.classList.add('btn-buy');
+    flashDealButton.setAttribute('data-amount', '99');
     flashDealButton.addEventListener('click', () => {
       // Set the purchase amount to $99
       currentPurchase.amount = 99;
