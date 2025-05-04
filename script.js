@@ -1643,3 +1643,105 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// Email capture form enhancement
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait for form to be fully loaded
+  const mcForm = document.getElementById('mc-embedded-subscribe-form');
+  
+  if (mcForm) {
+    // Add client-side validation
+    mcForm.addEventListener('submit', function(event) {
+      const emailInput = document.getElementById('mce-EMAIL');
+      const emailValue = emailInput.value.trim();
+      
+      // Simple email validation
+      if (!validateEmail(emailValue)) {
+        event.preventDefault();
+        
+        // Show error message
+        const errorResponse = document.getElementById('mce-error-response');
+        if (errorResponse) {
+          errorResponse.textContent = 'Please enter a valid email address.';
+          errorResponse.style.display = 'block';
+          
+          // Hide error message after 3 seconds
+          setTimeout(() => {
+            errorResponse.style.display = 'none';
+          }, 3000);
+        }
+        
+        // Focus back on the input
+        emailInput.focus();
+      } else {
+        // Track signup attempt with analytics
+        if (typeof gtag === 'function') {
+          gtag('event', 'newsletter_signup', {
+            'event_category': 'Engagement',
+            'event_label': 'Email Updates Form'
+          });
+        }
+        
+        // Also track with Toast notification
+        if (typeof showToast === 'function') {
+          // Use a timeout to allow the form to submit
+          setTimeout(() => {
+            showToast('Thank you for subscribing to our updates!', 'success', 5000);
+          }, 100);
+        }
+        
+        // If you want to handle form submission via AJAX instead of page redirect
+        // Uncomment this section:
+        /*
+        event.preventDefault();
+        
+        // Get the form data
+        const formData = new FormData(mcForm);
+        const url = mcForm.getAttribute('action').replace('/post?', '/post-json?') + '&c=?';
+        
+        // Convert formData to URL params
+        const params = new URLSearchParams(formData);
+        
+        // Use fetch to submit the form
+        fetch(url, {
+          method: 'POST',
+          body: params,
+          mode: 'no-cors'
+        })
+        .then(response => {
+          // Show success message
+          const successResponse = document.getElementById('mce-success-response');
+          if (successResponse) {
+            successResponse.textContent = 'Thank you for subscribing!';
+            successResponse.style.display = 'block';
+            
+            // Clear the input
+            emailInput.value = '';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+        */
+      }
+    });
+    
+    // Focus visual enhancement
+    const emailInput = document.getElementById('mce-EMAIL');
+    if (emailInput) {
+      emailInput.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+      
+      emailInput.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+      });
+    }
+  }
+  
+  // Email validation helper function
+  function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  }
+});
