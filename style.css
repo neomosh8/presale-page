@@ -1062,18 +1062,37 @@ footer {
         margin-bottom: 15px;
       }
       
-      .limited-time-bar .countdown {
-        display: inline-block;
-        color: #9A3412;
-        font-size: 1.1em;
-        font-weight: 800;
+      .countdown-container {
+        display: inline-flex;
+        align-items: center;
         margin: 0 5px;
-        border-bottom: 2px solid #9A3412;
+      }
+      
+      .countdown-unit {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 3px;
+        font-weight: 800;
+        background-color: rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+        padding: 0 5px;
+      }
+      
+      .countdown-value {
+        font-size: 1.15em;
+        color: #9A3412;
+      }
+      
+      .countdown-label {
+        font-size: 0.7em;
+        text-transform: uppercase;
+        color: #7C2D12;
       }
       
       /* Super Deal Price Card */
       .option-card.super-deal {
-        background-image: url('https://sitecontent.s3.us-east-1.amazonaws.com/image_card.jpg');
+        background-image: url('https://sitecontent.s3.us-east-1.amazonaws.com/image_card.jpg'); /* Replace with your image path */
         background-size: cover;
         background-position: center;
         border: none;
@@ -1135,20 +1154,44 @@ footer {
       }
       
       .super-deal .time-left {
-        margin-top: 8px;
-        margin-bottom: -8px;
+        margin-top: 10px;
+        margin-bottom: 5px;
         font-size: 0.9em;
         color: white;
         font-weight: 600;
         text-align: center;
       }
       
-      .super-deal .time-left .days {
-        font-size: 1.6em;
+      .card-countdown-container {
+        display: flex;
+        justify-content: center;
+        margin: 15px 0;
+      }
+      
+      .card-countdown-unit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 5px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 6px 10px;
+        min-width: 60px;
+      }
+      
+      .card-countdown-value {
+        font-size: 1.8em;
         font-weight: 800;
         color: white;
-        display: inline-block;
+        line-height: 1;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      .card-countdown-label {
+        font-size: 0.7em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 2px;
       }
       
       .super-deal h3 {
