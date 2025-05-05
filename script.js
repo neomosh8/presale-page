@@ -1842,7 +1842,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentPurchase.contactValue = contactValue;
 
                     // Update UI elements for logged-in state
-                    document.getElementById('login-button')?.textContent = 'My Profile'; // Or maybe 'Verified' temporarily?
+                    const loginButton = document.getElementById('login-button');
+if (loginButton) {
+    loginButton.textContent = 'My Profile'; // Or maybe 'Verified' temporarily?
+}
+                    
                     document.getElementById('comment-form')?.classList.add('user-logged-in');
                     updateFormValidation(); // Update comment form requirements
 
