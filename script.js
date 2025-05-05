@@ -1927,3 +1927,257 @@ document.querySelectorAll('.modal').forEach(modal => {
     return re.test(String(email).toLowerCase());
   }
 });
+// Enhanced Shipping Form with Google Places API Integration
+
+// Function to initialize Google Places API for address autocomplete
+function initGooglePlacesAutocomplete() {
+  // Get the shipping address input field
+  const addressInput = document.getElementById('ship-address-autocomplete');
+  if (!addressInput) return;
+  
+  // Create the autocomplete object, restricting to US and Canada addresses
+  const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+    types: ['address'],
+    componentRestrictions: { country: ['us', 'ca'] }
+  });
+  
+  // Set fields to retrieve specific address components
+  autocomplete.setFields([
+    'address_components', 
+    'formatted_address'
+  ]);
+  
+  // Add a listener for when a place is selected
+  autocomplete.addListener('place_changed', function() {
+    const place = autocomplete.getPlace();
+    
+    if (!place.address_components) {
+      console.error('No address components found');
+      return;
+    }
+    
+    // Show the detailed address form fields
+    document.getElementById('detailed-address-fields').classList.remove('hidden');
+    
+    // Extract address components
+    let streetNumber = '';
+    let streetName = '';
+    let city = '';
+    let state = '';
+    let country = '';
+    let postalCode = '';
+    
+    // Parse address components
+    place.address_components.forEach(component => {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (types.includes('route')) {
+        streetName = component.long_name;
+      } else if (types.includes('locality') || types.includes('sublocality_level_1')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.long_name;
+      } else if (types.includes('country')) {
+        country = component.long_name;
+      } else if (types.includes('postal_code')) {
+        postalCode = component.long_name;
+      }
+    });
+    
+    // Populate street address field
+    const streetAddress = streetNumber && streetName ? `${streetNumber} ${streetName}` : place.formatted_address.split(',')[0];
+    document.getElementById('ship-street-address').value = streetAddress;
+    
+    // Populate city field
+    document.getElementById('ship-city').value = city;
+    
+    // Populate state/province field
+    document.getElementById('ship-state').value = state;
+    
+    // Populate zip/postal code field
+    document.getElementById('ship-zip').value = postalCode;
+    
+    // Populate country field
+    document.getElementById('ship-country').value = country;
+    
+    // Validate if address is in US or Canada
+    if (country && (country === 'United States' || country === 'Canada')) {
+      // Show success indicator
+      addressInput.classList.add('validated-address');
+      document.getElementById('address-validation-message').textContent = 'Address validated';
+      document.getElementById('address-validation-message').classList.add('success');
+      document.getElementById('address-validation-message').classList.remove('hidden');
+    } else {
+      // Show error message for non US/Canada addresses
+      addressInput.classList.remove('validated-address');
+      document.getElementById('address-validation-message').textContent = 'Only US and Canada addresses are supported';
+      document.getElementById('address-validation-message').classList.remove('success');
+      document.getElementById('address-validation-message').classList.remove('hidden');
+    }
+  });
+  
+  // Add focus listener to hide validation message when editing
+  addressInput.addEventListener('focus', function() {
+    document.getElementById('address-validation-message').classList.add('hidden');
+    addressInput.classList.remove('validated-address');
+  });
+}
+
+// Initialize the shipping form and Google Places API
+function initShippingForm() {
+  // Add Google Places API script if not already loaded
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCbdbtw0N2SQ3xdGNg5VFkb27VwEJwZELI&libraries=places';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGooglePlacesAutocomplete;
+    document.head.appendChild(script);
+  } else {
+    initGooglePlacesAutocomplete();
+  }
+  
+  // Handle shipping form submission
+  document.getElementById('shipping-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('shipping-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+    
+    const f = e.target;
+    
+    // Collect shipping information
+    const shipping = {
+      name: f['ship-name'].value,
+      // Combine street address with any apartment/unit info
+      address: f['ship-street-address'].value + 
+              (f['ship-apartment'].value ? `, ${f['ship-apartment'].value}` : ''),
+      city: f['ship-city'].value,
+      state: f['ship-state'].value,
+      zip: f['ship-zip'].value,
+      country: f['ship-country'].value,
+      phone: f['ship-phone'].value,
+      email: f['ship-email'].value 
+    };
+    
+    // Update user profile with all contact info
+    if (currentUser) {
+      // Store both email and phone from shipping form to user profile
+      const updatedContactInfo = {
+        email: shipping.email,
+        phone: shipping.phone,
+        shippingInfo: {
+          name: shipping.name,
+          address: shipping.address,
+          city: shipping.city,
+          state: shipping.state,
+          zip: shipping.zip,
+          country: shipping.country
+        }
+      };
+      
+      try {
+        if (authToken) {
+          // Update user profile with new contact and shipping information
+          const updatedUser = await updateUserProfile(
+            currentUser.contactMethod,
+            currentUser.contactValue,
+            updatedContactInfo
+          );
+          
+          if (updatedUser) {
+            // Update current user with consolidated data
+            currentUser = {
+              ...currentUser,
+              ...updatedUser
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error updating user profile:', error);
+        // Continue with checkout anyway
+      }
+    }
+    
+    try {
+      // Store order info in localStorage for retrieval after checkout
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        amount: currentPurchase.amount,
+        contactMethod: currentPurchase.contactMethod,
+        contactValue: currentPurchase.contactValue,
+        shipping: shipping,
+        id: `order_${Date.now()}`,
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Prepare data for API - ensure compatibility with the existing backend
+      const checkoutData = {
+        amount: currentPurchase.amount,
+        contactMethod: currentPurchase.contactMethod,
+        contactValue: currentPurchase.contactValue,
+        shipping: {
+          name: shipping.name,
+          address: shipping.address,
+          city: shipping.city,
+          country: shipping.country, // Keep this for compatibility
+          state: shipping.state,     // Add this for better address data
+          zip: shipping.zip,         // Add this for better address data
+          phone: shipping.phone,
+          email: shipping.email
+        }
+      };
+      
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(checkoutData)
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Server responded with status: ${res.status}`);
+      }
+      
+      const {sessionUrl} = await res.json();
+      window.location = sessionUrl;
+    } catch (error) {
+      console.error('Checkout error:', error);
+      showToast('An error occurred during checkout. Please try again.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continue to Payment';
+    }
+  });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Look for shipping-modal and initialize once it's opened
+  document.getElementById('login-button')?.addEventListener('click', function() {
+    if (currentUser) {
+      // Initialize shipping form when the profile is loaded
+      // This ensures Google Places API is only loaded when needed
+      setTimeout(initShippingForm, 500);
+    }
+  });
+  
+  // Also initialize when any purchase button is clicked
+  document.querySelectorAll('.btn-deposit, .btn-buy, #flash-deal-button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // If user is logged in, shipping modal opens directly
+      if (currentUser) {
+        setTimeout(initShippingForm, 500);
+      }
+    });
+  });
+  
+  // Initialize when OTP verification is successful and shipping modal opens
+  document.getElementById('purchase-verify-otp-btn')?.addEventListener('click', function() {
+    setTimeout(function() {
+      if (!document.getElementById('shipping-modal').classList.contains('hidden')) {
+        initShippingForm();
+      }
+    }, 1000);
+  });
+});

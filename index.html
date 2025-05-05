@@ -608,21 +608,69 @@
 </div>
 
   <!-- Shipping -->
-  <div id="shipping-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-modal" data-modal="shipping-modal">&times;</span>
-      <h3>Shipping &amp; Contact</h3>
-      <form id="shipping-form">
-        <input name="ship-name" placeholder="Full Name" required>
-        <input name="ship-address" placeholder="Street Address" required>
-        <input name="ship-city" placeholder="City" required>
-        <input name="ship-country" placeholder="Country" required>
-        <input name="ship-phone" placeholder="Phone Number" required pattern="[0-9+\-\s()]{6,20}">
-        <input name="ship-email" type="email" placeholder="Email Address" required>
-        <button type="submit" id="shipping-submit-btn">Continue to Payment</button>
-      </form>
-    </div>
+<!-- Shipping Modal with Google Places Integration -->
+<div id="shipping-modal" class="modal hidden">
+  <div class="modal-content shipping-modal-content">
+    <span class="close-modal" data-modal="shipping-modal">&times;</span>
+    <h3>Shipping & Contact</h3>
+    <form id="shipping-form">
+      <!-- Initial simplified form with 4 fields -->
+      <div class="form-group">
+        <input name="ship-name" id="ship-name" placeholder="Full Name" required>
+      </div>
+      
+      <div class="form-group">
+        <input name="ship-phone" id="ship-phone" placeholder="Phone Number" required pattern="[0-9+\-\s()]{6,20}">
+      </div>
+      
+      <div class="form-group">
+        <input name="ship-email" id="ship-email" type="email" placeholder="Email Address" required>
+      </div>
+      
+      <div class="form-group address-group">
+        <input name="ship-address-autocomplete" id="ship-address-autocomplete" placeholder="Start typing your address..." required>
+        <div id="address-validation-message" class="validation-message hidden"></div>
+      </div>
+      
+      <!-- Detailed address fields (initially hidden) -->
+      <div id="detailed-address-fields" class="hidden">
+        <div class="form-divider">
+          <span>Address Details</span>
+        </div>
+        
+        <div class="form-group">
+          <input name="ship-street-address" id="ship-street-address" placeholder="Street Address" required readonly>
+        </div>
+        
+        <div class="form-group">
+          <input name="ship-apartment" id="ship-apartment" placeholder="Apartment, suite, unit, etc. (optional)">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group half">
+            <input name="ship-city" id="ship-city" placeholder="City" required readonly>
+          </div>
+          
+          <div class="form-group half">
+            <input name="ship-state" id="ship-state" placeholder="State/Province" required readonly>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group half">
+            <input name="ship-zip" id="ship-zip" placeholder="ZIP/Postal Code" required readonly>
+          </div>
+          
+          <div class="form-group half">
+            <input name="ship-country" id="ship-country" placeholder="Country" required readonly>
+          </div>
+        </div>
+      </div>
+      
+      <button type="submit" id="shipping-submit-btn" class="btn">Continue to Payment</button>
+    </form>
   </div>
+</div>
 
   <!-- Login -->
 <div id="login-modal" class="modal hidden">
