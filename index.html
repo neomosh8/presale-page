@@ -553,46 +553,55 @@
 
   <!-- ───────────────────────────────────────────────────────────────────────
        MODALS (unchanged)                                                   -->
-  <!-- Purchase OTP -->
-  <div id="purchase-otp-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-modal" data-modal="purchase-otp-modal">&times;</span>
-      <h3>Login to Purchase</h3>
-      
-      <!-- Add Google Sign-In button -->
-      <div class="google-signin-container" style="text-align: center; margin-bottom: 20px;">
-        <div id="g_id_onload"
-           data-client_id="615735242765-o0rm9iuv9291h9iq5t6rh17co4gmjahb.apps.googleusercontent.com"
-           data-context="signin"
-           data-callback="handleGoogleSignIn"
-           data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin"
-           data-type="standard"
-           data-size="large"
-           data-theme="outline"
-           data-text="sign_in_with"
-           data-shape="rectangular"
-           data-logo_alignment="center">
-        </div>
+  <!-- Purchase OTP Modal - Improved Design -->
+<div id="purchase-otp-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" data-modal="purchase-otp-modal">&times;</span>
+    <h3>Login to Purchase</h3>
+    
+    <!-- Google Sign-In button -->
+    <div class="google-signin-container" style="text-align: center; margin-bottom: 20px;">
+      <div id="g_id_onload"
+         data-client_id="615735242765-o0rm9iuv9291h9iq5t6rh17co4gmjahb.apps.googleusercontent.com"
+         data-context="signin"
+         data-callback="handleGoogleSignIn"
+         data-auto_prompt="false">
       </div>
-      
-      <div class="separator" style="display: flex; align-items: center; margin: 20px 0;">
-        <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
-        <span style="padding: 0 10px; color: #64748B; font-size: 0.9em;">or login with OTP</span>
-        <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
-      </div>
-      
-      <label><input type="radio" name="purchase-contact-method" value="email" checked> Email</label>
-      <label><input type="radio" name="purchase-contact-method" value="sms"> Phone</label>
-      <input id="purchase-contact-value" type="email" placeholder="Enter email address" required>
-      <button id="purchase-send-otp-btn">Send OTP</button>
-      <div id="purchase-otp-section" style="display:none">
-        <input id="purchase-otp-code" placeholder="Enter OTP" required>
-        <button id="purchase-verify-otp-btn">Verify OTP</button>
+      <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="center">
       </div>
     </div>
+    
+    <div class="separator" style="display: flex; align-items: center; margin: 20px 0;">
+      <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
+      <span style="padding: 0 10px; color: #64748B; font-size: 0.9em;">or login with OTP</span>
+      <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
+    </div>
+    
+    <!-- Default to email with cleaner design -->
+    <div class="contact-method-container">
+      <input type="email" id="purchase-contact-value" placeholder="Enter your email address" required>
+      <div class="alternative-method">
+        <a href="#" id="toggle-contact-method">Use phone number instead</a>
+      </div>
+    </div>
+    
+    <button id="purchase-send-otp-btn" class="btn">Send Verification Code</button>
+    
+    <!-- OTP verification section (hidden initially) -->
+    <div id="purchase-otp-section" style="display:none" class="otp-verification-section">
+      <p class="otp-sent-message">Verification code sent to your email</p>
+      <input id="purchase-otp-code" placeholder="Enter verification code" required>
+      <button id="purchase-verify-otp-btn" class="btn">Verify</button>
+      <a href="#" id="purchase-resend-otp" class="resend-link">Resend code</a>
+    </div>
   </div>
+</div>
 
   <!-- Shipping -->
   <div id="shipping-modal" class="modal hidden">
