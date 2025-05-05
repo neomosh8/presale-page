@@ -1931,30 +1931,60 @@ document.querySelectorAll('.modal').forEach(modal => {
 
 // Function to initialize Google Places API for address autocomplete
 function initGooglePlacesAutocomplete() {
-  // Get the shipping address input field
+  // Get the shipping address input field and container
   const addressInput = document.getElementById('ship-address-autocomplete');
-  if (!addressInput) return;
+  const autocompleteContainer = document.getElementById('address-autocomplete-container');
+  if (!addressInput || !autocompleteContainer) return;
   
-  // Create the autocomplete object, restricting to US and Canada addresses
-  const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-    types: ['address'],
-    componentRestrictions: { country: ['us', 'ca'] }
-  });
+  // Create a PlaceAutocompleteElement instead of Autocomplete (newer API)
+  const options = {
+    fields: ["address_components", "formatted_address"],
+    types: ["address"],
+    componentRestrictions: { country: ["us", "ca"] }
+  };
   
-  // Set fields to retrieve specific address components
-  autocomplete.setFields([
-    'address_components', 
-    'formatted_address'
-  ]);
+  // Clear previous autocomplete if exists
+  while (autocompleteContainer.firstChild) {
+    autocompleteContainer.removeChild(autocompleteContainer.firstChild);
+  }
   
-  // Add a listener for when a place is selected
-  autocomplete.addListener('place_changed', function() {
-    const place = autocomplete.getPlace();
+  // If PlaceAutocompleteElement is available, use it (newer API)
+  if (google.maps.places.PlaceAutocompleteElement) {
+    const autocompleteElement = new google.maps.places.PlaceAutocompleteElement(options);
+    autocompleteContainer.appendChild(autocompleteElement);
     
-    if (!place.address_components) {
-      console.error('No address components found');
-      return;
-    }
+    // Add event listener for place selection
+    autocompleteElement.addEventListener('gmp-placeselect', event => {
+      const place = event.place;
+      
+      if (!place.address_components) {
+        console.error('No address components found');
+        return;
+      }
+  } else {
+    // Fallback to classic Autocomplete for backward compatibility
+    console.log("Using classic Autocomplete as fallback");
+    
+    // Create the autocomplete object, restricting to US and Canada addresses
+    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+      types: ['address'],
+      componentRestrictions: { country: ['us', 'ca'] }
+    });
+    
+    // Set fields to retrieve specific address components
+    autocomplete.setFields([
+      'address_components', 
+      'formatted_address'
+    ]);
+    
+    // Add a listener for when a place is selected
+    autocomplete.addListener('place_changed', function() {
+      const place = autocomplete.getPlace();
+      
+      if (!place.address_components) {
+        console.error('No address components found');
+        return;
+      }
     
     // Show the detailed address form fields
     document.getElementById('detailed-address-fields').classList.remove('hidden');
@@ -2027,14 +2057,15 @@ function initGooglePlacesAutocomplete() {
 
 // Initialize the shipping form and Google Places API
 function initShippingForm() {
-  // Add Google Places API script if not already loaded
+  // Add Google Places API script with proper async loading
   if (!window.google || !window.google.maps || !window.google.maps.places) {
     const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCbdbtw0N2SQ3xdGNg5VFkb27VwEJwZELI&libraries=places';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCbdbtw0N2SQ3xdGNg5VFkb27VwEJwZELI&libraries=places&loading=async&callback=initGooglePlacesAutocomplete';
     script.async = true;
-    script.defer = true;
-    script.onload = initGooglePlacesAutocomplete;
     document.head.appendChild(script);
+    
+    // Make the initialization function globally available for the callback
+    window.initGooglePlacesAutocomplete = initGooglePlacesAutocomplete;
   } else {
     initGooglePlacesAutocomplete();
   }

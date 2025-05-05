@@ -1557,8 +1557,66 @@ footer {
     position: relative;
   }
   
+  /* Labels for form fields */
+  .form-group label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--secondary-color);
+  }
+  
   #ship-address-autocomplete {
     transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+  }
+  
+  /* Autocomplete container styling */
+  .autocomplete-container {
+    position: relative;
+    width: 100%;
+    min-height: 40px;
+    margin-top: 5px;
+  }
+  
+  /* Make sure the Google autocomplete element takes full width */
+  .autocomplete-container > * {
+    width: 100% !important;
+  }
+  
+  /* Address summary container */
+  .address-summary-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 20px;
+  }
+  
+  .address-summary {
+    margin: 0;
+    font-size: 0.95em;
+    color: var(--dark-gray);
+    flex: 1;
+  }
+  
+  .edit-address-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .edit-address-btn:hover {
+    background-color: rgba(59, 130, 246, 0.1);
   }
   
   /* Validated address styling */

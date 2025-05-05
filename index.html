@@ -627,8 +627,11 @@
         <input name="ship-email" id="ship-email" type="email" placeholder="Email Address" required>
       </div>
       
+      <!-- Address entry step 1: Input field and autocomplete container -->
       <div class="form-group address-group">
-        <input name="ship-address-autocomplete" id="ship-address-autocomplete" placeholder="Start typing your address..." required>
+        <label>Shipping Address (US & Canada only)</label>
+        <input name="ship-address-autocomplete" id="ship-address-autocomplete" placeholder="Start typing your address...">
+        <div id="address-autocomplete-container" class="autocomplete-container"></div>
         <div id="address-validation-message" class="validation-message hidden"></div>
       </div>
       
@@ -638,15 +641,22 @@
           <span>Address Details</span>
         </div>
         
-        <div class="form-group">
+        <!-- Address summary display -->
+        <div class="address-summary-container">
+          <p id="address-summary" class="address-summary"></p>
+          <button type="button" id="edit-address-btn" class="edit-address-btn">Edit</button>
+        </div>
+        
+        <div class="form-group hidden">
           <input name="ship-street-address" id="ship-street-address" placeholder="Street Address" required readonly>
         </div>
         
         <div class="form-group">
-          <input name="ship-apartment" id="ship-apartment" placeholder="Apartment, suite, unit, etc. (optional)">
+          <label for="ship-apartment">Apartment/Suite (optional)</label>
+          <input name="ship-apartment" id="ship-apartment" placeholder="Apartment, suite, unit, etc.">
         </div>
         
-        <div class="form-row">
+        <div class="form-row hidden">
           <div class="form-group half">
             <input name="ship-city" id="ship-city" placeholder="City" required readonly>
           </div>
@@ -656,7 +666,7 @@
           </div>
         </div>
         
-        <div class="form-row">
+        <div class="form-row hidden">
           <div class="form-group half">
             <input name="ship-zip" id="ship-zip" placeholder="ZIP/Postal Code" required readonly>
           </div>
