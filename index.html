@@ -554,6 +554,7 @@
   <!-- ───────────────────────────────────────────────────────────────────────
        MODALS (unchanged)                                                   -->
   <!-- Purchase OTP Modal - Improved Design -->
+<!-- Purchase OTP Modal - Improved Design -->
 <div id="purchase-otp-modal" class="modal hidden">
   <div class="modal-content">
     <span class="close-modal" data-modal="purchase-otp-modal">&times;</span>
@@ -583,15 +584,18 @@
       <div style="flex-grow: 1; height: 1px; background-color: #CBD5E1;"></div>
     </div>
     
-    <!-- Default to email with cleaner design -->
-    <div class="contact-method-container">
-      <input type="email" id="purchase-contact-value" placeholder="Enter your email address" required>
-      <div class="alternative-method">
-        <a href="#" id="toggle-contact-method">Use phone number instead</a>
+    <!-- Initial contact input section - will be hidden after sending OTP -->
+    <div id="initial-contact-section">
+      <!-- Default to email with cleaner design -->
+      <div class="contact-method-container">
+        <input type="email" id="purchase-contact-value" placeholder="Enter your email address" required>
+        <div class="alternative-method">
+          <a href="#" id="toggle-contact-method">Use phone number instead</a>
+        </div>
       </div>
+      
+      <button id="purchase-send-otp-btn" class="btn">Send Verification Code</button>
     </div>
-    
-    <button id="purchase-send-otp-btn" class="btn">Send Verification Code</button>
     
     <!-- OTP verification section (hidden initially) -->
     <div id="purchase-otp-section" style="display:none" class="otp-verification-section">

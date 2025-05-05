@@ -207,6 +207,7 @@ const earlyBirdRemaining = earlyBirdTotal - depositAmount; // Amount to pay late
 let purchasedSpots = parseInt(localStorage.getItem('purchasedSpots') || '0');
 // We'll populate this with environment variable later
 let MAX_SPOTS = 10;
+
 /* ── Global state ──────────────────────────────────────────────────────── */
 let currentPurchase = {
   amount: 0,
@@ -222,6 +223,7 @@ let pendingComment = {
 
 let currentUser = null;
 let authToken = null;
+let currentContactMethod = 'email'; // Add this to track the current contact method
 
 /* ── Helper functions ─────────────────────────────────────────────────── */
 const formatCurrency = (a) => '$' + a.toFixed(2);
@@ -336,8 +338,19 @@ function closeModal(modalId) {
   
   // Reset OTP sections
   if (modalId === 'purchase-otp-modal') {
-    document.getElementById('purchase-otp-section').style.display = 'none';
-    document.getElementById('purchase-send-otp-btn').disabled = false;
+    // Reset both sections for the purchase OTP modal
+    const initialSection = document.getElementById('initial-contact-section');
+    if (initialSection) initialSection.style.display = 'block';
+    
+    const otpSection = document.getElementById('purchase-otp-section');
+    if (otpSection) otpSection.style.display = 'none';
+
+    // Reset button state
+    const sendBtn = document.getElementById('purchase-send-otp-btn');
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Verification Code';
+    }
   } else if (modalId === 'login-modal') {
     document.getElementById('login-otp-section').style.display = 'none';
     document.getElementById('login-send-otp-btn').disabled = false;
@@ -601,42 +614,42 @@ function trackTwitterConversion(orderValue, email) {
 
 /* ── DOMContentLoaded ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize toast notification system
+  addToastStyles();
 
   const videoSection = document.querySelector('.product-video');
   const video = document.querySelector('.product-video video');
   
-  if (!videoSection || !video) return;
-  
-  // Create a container for the button
-  const buttonContainer = document.createElement('div');
-  buttonContainer.className = 'demo-button-container';
-  
-  // Create the button
-  const demoButton = document.createElement('button');
-  demoButton.className = 'demo-button';
-  demoButton.textContent = 'Watch product demo';
-  
-  // Add the button to the container
-  buttonContainer.appendChild(demoButton);
-  
-  // Insert the container after the video section
-  videoSection.parentNode.insertBefore(buttonContainer, videoSection.nextSibling);
-  
-  // Add click event listener to the button
-  demoButton.addEventListener('click', function() {
-    // The demo chapter starts at 30 seconds based on your video-analytics.js
-    video.currentTime = 30;
+  if (videoSection && video) {
+    // Create a container for the button
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'demo-button-container';
     
-    // Make sure video is playing
-    video.play().catch(error => {
-      console.error('Error playing video:', error);
+    // Create the button
+    const demoButton = document.createElement('button');
+    demoButton.className = 'demo-button';
+    demoButton.textContent = 'Watch product demo';
+    
+    // Add the button to the container
+    buttonContainer.appendChild(demoButton);
+    
+    // Insert the container after the video section
+    videoSection.parentNode.insertBefore(buttonContainer, videoSection.nextSibling);
+    
+    // Add click event listener to the button
+    demoButton.addEventListener('click', function() {
+      // The demo chapter starts at 30 seconds based on your video-analytics.js
+      video.currentTime = 30;
+      
+      // Make sure video is playing
+      video.play().catch(error => {
+        console.error('Error playing video:', error);
+      });
+      
+      // Scroll to ensure video is visible
+      videoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
-    
-    // Scroll to ensure video is visible
-    videoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-  // Initialize toast notification system
-  addToastStyles();
+  }
 
   /* ----- Create Order Success Modal ----- */
   // Add the order success modal to the DOM if it doesn't exist
@@ -668,147 +681,120 @@ document.addEventListener('DOMContentLoaded', async () => {
   const buyNowDisp = document.getElementById('buy-now-price-display');
   buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
 
+  // Fetch max spots environment variable
+  fetch('/api/get-config')
+    .then(response => response.json())
+    .then(data => {
+      if (data.MAX_SPOTS) {
+        MAX_SPOTS = parseInt(data.MAX_SPOTS);
+        updateSpotsProgress();
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching configuration:', error);
+    });
 
-// Fetch max spots environment variable
-fetch('/api/get-config')
-  .then(response => response.json())
-  .then(data => {
-    if (data.MAX_SPOTS) {
-      MAX_SPOTS = parseInt(data.MAX_SPOTS);
+  // Function to update spots progress bar
+  function updateSpotsProgress() {
+    console.log('Updating spots progress, MAX_SPOTS:', MAX_SPOTS, 'purchasedSpots:', purchasedSpots);
+    
+    const progressFill = document.getElementById('spots-progress-fill');
+    const spotsAvailableElement = document.getElementById('spots-available');
+    const spotsTotalElement = document.getElementById('spots-total');
+    const spotsContainer = document.querySelector('.spots-progress-container');
+    
+    // If any element is missing, exit early
+    if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
+      console.error('Required elements for progress bar not found. Check your HTML.');
+      return;
+    }
+    
+    const spotsAvailable = MAX_SPOTS - purchasedSpots;
+    
+    // Calculate percentage filled
+    const percentFilled = (purchasedSpots / MAX_SPOTS) * 100;
+    console.log('Percent filled:', percentFilled + '%');
+    
+    // Update the progress bar fill width
+    progressFill.style.width = `${percentFilled}%`;
+    
+    // Update text counter
+    spotsAvailableElement.textContent = spotsAvailable;
+    spotsTotalElement.textContent = MAX_SPOTS;
+    
+    // Add urgency styling when less than 30% spots remain
+    if (spotsAvailable <= MAX_SPOTS * 0.3) {
+      spotsContainer.classList.add('spots-limited');
+    } else {
+      spotsContainer.classList.remove('spots-limited');
+    }
+    
+    // Disable button if no spots available
+    const buyNowButton = document.getElementById('buy-now-button');
+    if (spotsAvailable <= 0 && buyNowButton) {
+      buyNowButton.disabled = true;
+      buyNowButton.textContent = 'Sold Out';
+      document.querySelector('.option-card:last-child').classList.add('sold-out');
+    }
+  }
+
+  // Get configuration and purchase count from server
+  async function initializeSpots() {
+    console.log('Initializing spots from server...');
+    
+    try {
+      // Fetch the actual purchase count from the server
+      const response = await fetch('/api/purchase-count');
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Server data received:', data);
+      
+      // Update global variables
+      if (data.maxSpots) {
+        MAX_SPOTS = parseInt(data.maxSpots);
+      }
+      
+      // Important: Update the purchasedSpots variable with the actual server count
+      // Only use localStorage if the server count is lower (to handle new purchases)
+      const storedCount = parseInt(localStorage.getItem('purchasedSpots') || '0');
+      purchasedSpots = Math.max(data.count, storedCount);
+      
+      // Update localStorage to match
+      localStorage.setItem('purchasedSpots', purchasedSpots.toString());
+      
+      // Update the UI
+      updateSpotsProgress();
+    } catch (error) {
+      console.error('Error fetching data from server:', error);
+      // Fall back to localStorage if server fetch fails
       updateSpotsProgress();
     }
-  })
-  .catch(error => {
-    console.error('Error fetching configuration:', error);
-  });
-
-// Function to update spots progress bar
-// Add this to the bottom of your DOMContentLoaded event listener
-// after all the other code but before the closing brackets
-
-// Enhanced version of updateSpotsProgress that includes debugging
-function updateSpotsProgress() {
-  console.log('Updating spots progress, MAX_SPOTS:', MAX_SPOTS, 'purchasedSpots:', purchasedSpots);
-  
-  const progressFill = document.getElementById('spots-progress-fill');
-  const spotsAvailableElement = document.getElementById('spots-available');
-  const spotsTotalElement = document.getElementById('spots-total');
-  const spotsContainer = document.querySelector('.spots-progress-container');
-  
-  // If any element is missing, exit early
-  if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
-    console.error('Required elements for progress bar not found. Check your HTML.');
-    return;
   }
-  
-  const spotsAvailable = MAX_SPOTS - purchasedSpots;
-  
-  // Calculate percentage filled
-  const percentFilled = (purchasedSpots / MAX_SPOTS) * 100;
-  console.log('Percent filled:', percentFilled + '%');
-  
-  // Update the progress bar fill width
-  progressFill.style.width = `${percentFilled}%`;
-  
-  // Update text counter
-  spotsAvailableElement.textContent = spotsAvailable;
-  spotsTotalElement.textContent = MAX_SPOTS;
-  
-  // Add urgency styling when less than 30% spots remain
-  if (spotsAvailable <= MAX_SPOTS * 0.3) {
-    spotsContainer.classList.add('spots-limited');
-  } else {
-    spotsContainer.classList.remove('spots-limited');
-  }
-  
-  // Disable button if no spots available
-  const buyNowButton = document.getElementById('buy-now-button');
-  if (spotsAvailable <= 0 && buyNowButton) {
-    buyNowButton.disabled = true;
-    buyNowButton.textContent = 'Sold Out';
-    document.querySelector('.option-card:last-child').classList.add('sold-out');
-  }
-}
 
-// Get configuration and purchase count from server
-async function initializeSpots() {
-  console.log('Initializing spots from server...');
-  
-  try {
-    // Fetch the actual purchase count from the server
-    const response = await fetch('/api/purchase-count');
+  // Add a function to check if elements exist and try again if not
+  function ensureProgressBarInit() {
+    const required = [
+      document.getElementById('spots-progress-fill'),
+      document.getElementById('spots-available'),
+      document.getElementById('spots-total'),
+      document.querySelector('.spots-progress-container')
+    ];
     
-    if (!response.ok) {
-      throw new Error(`Server responded with status: ${response.status}`);
+    if (required.every(el => el)) {
+      console.log('All progress bar elements found, initializing from server...');
+      initializeSpots();
+    } else {
+      console.log('Progress bar elements not found, will retry in 500ms...');
+      setTimeout(ensureProgressBarInit, 500);
     }
-    
-    const data = await response.json();
-    console.log('Server data received:', data);
-    
-    // Update global variables
-    if (data.maxSpots) {
-      MAX_SPOTS = parseInt(data.maxSpots);
-    }
-    
-    // Important: Update the purchasedSpots variable with the actual server count
-    // Only use localStorage if the server count is lower (to handle new purchases)
-    const storedCount = parseInt(localStorage.getItem('purchasedSpots') || '0');
-    purchasedSpots = Math.max(data.count, storedCount);
-    
-    // Update localStorage to match
-    localStorage.setItem('purchasedSpots', purchasedSpots.toString());
-    
-    // Update the UI
-    updateSpotsProgress();
-  } catch (error) {
-    console.error('Error fetching data from server:', error);
-    // Fall back to localStorage if server fetch fails
-    updateSpotsProgress();
   }
-}
 
-// Add a function to check if elements exist and try again if not
-function ensureProgressBarInit() {
-  const required = [
-    document.getElementById('spots-progress-fill'),
-    document.getElementById('spots-available'),
-    document.getElementById('spots-total'),
-    document.querySelector('.spots-progress-container')
-  ];
-  
-  if (required.every(el => el)) {
-    console.log('All progress bar elements found, initializing from server...');
-    initializeSpots();
-  } else {
-    console.log('Progress bar elements not found, will retry in 500ms...');
-    setTimeout(ensureProgressBarInit, 500);
-  }
-}
-
-// Start initialization process
-ensureProgressBarInit();
-
-// Add a function to check if elements exist and try again if not
-function ensureProgressBarInit() {
-  const required = [
-    document.getElementById('spots-progress-fill'),
-    document.getElementById('spots-available'),
-    document.getElementById('spots-total'),
-    document.querySelector('.spots-progress-container')
-  ];
-  
-  if (required.every(el => el)) {
-    console.log('All progress bar elements found, initializing...');
-    initializeSpots();
-  } else {
-    console.log('Progress bar elements not found, will retry in 500ms...');
-    setTimeout(ensureProgressBarInit, 500);
-  }
-}
-
-// Start initialization process
-ensureProgressBarInit();
-
+  // Start initialization process
+  ensureProgressBarInit();
 
   /* ----- Check for stored authentication ----- */
   await checkStoredAuth();
@@ -832,7 +818,7 @@ ensureProgressBarInit();
   });
   
   // Close profile modal with button
-  document.getElementById('profile-close-btn').addEventListener('click', () => {
+  document.getElementById('profile-close-btn')?.addEventListener('click', () => {
     closeModal('profile-modal');
   });
 
@@ -868,117 +854,237 @@ ensureProgressBarInit();
     });
   });
 
-  /* contact method switch - purchase */
-  document.getElementsByName('purchase-contact-method').forEach(r => {
-    r.addEventListener('change', e => {
-      const inp = document.getElementById('purchase-contact-value');
-      if (e.target.value === 'sms') {
-        inp.type = 'tel';
-        inp.placeholder = 'Enter phone number';
-        inp.pattern = '[0-9+\\-\\s()]{6,20}';
+  /* ----- Toggle between email and phone for OTP modal ----- */
+  document.addEventListener('click', function(e) {
+    // Toggle contact method link
+    if (e.target && e.target.id === 'toggle-contact-method') {
+      e.preventDefault();
+      const contactInput = document.getElementById('purchase-contact-value');
+      const toggleLink = document.getElementById('toggle-contact-method');
+      
+      if (!contactInput || !toggleLink) return; // Safety check
+      
+      if (contactInput.type === 'email') {
+        // Switch to phone
+        contactInput.type = 'tel';
+        contactInput.placeholder = 'Enter your phone number';
+        toggleLink.textContent = 'Use email address instead';
+        currentContactMethod = 'sms';
       } else {
-        inp.type = 'email';
-        inp.placeholder = 'Enter email address';
-        inp.pattern = '';
+        // Switch to email
+        contactInput.type = 'email';
+        contactInput.placeholder = 'Enter your email address';
+        toggleLink.textContent = 'Use phone number instead';
+        currentContactMethod = 'email';
       }
-    });
+      
+      // Clear the input when switching methods
+      contactInput.value = '';
+    }
+    
+    // Handle resend OTP as a link
+    if (e.target && e.target.id === 'purchase-resend-otp') {
+      e.preventDefault();
+      const contactInput = document.getElementById('purchase-contact-value');
+      
+      if (!contactInput) {
+        showToast('Error: Contact input not found', 'error');
+        return;
+      }
+      
+      const contactValue = contactInput.value.trim();
+      
+      if (!contactValue) {
+        showToast('Please enter your contact information first', 'warning');
+        return;
+      }
+      
+      // Temporarily disable the link
+      e.target.style.opacity = '0.5';
+      e.target.style.pointerEvents = 'none';
+      
+      // Send OTP again
+      sendOtp(currentContactMethod, contactValue).then(success => {
+        if (success) {
+          showToast('Verification code resent successfully', 'success');
+        } else {
+          showToast('Failed to resend verification code. Please try again.', 'error');
+        }
+        
+        // Re-enable the link after a delay
+        setTimeout(() => {
+          e.target.style.opacity = '1';
+          e.target.style.pointerEvents = 'auto';
+        }, 3000);
+      }).catch(err => {
+        console.error('Error sending OTP:', err);
+        showToast('An error occurred. Please try again.', 'error');
+        e.target.style.opacity = '1';
+        e.target.style.pointerEvents = 'auto';
+      });
+    }
   });
 
-  /* send OTP (purchase) */
-  document.getElementById('purchase-send-otp-btn').addEventListener('click', async () => {
-    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
-    const val = document.getElementById('purchase-contact-value').value.trim();
-    
-    if (!val) {
-      showToast('Please enter your contact information.', 'warning');
-      return;
-    }
-    
-    if (method === 'email' && !val.includes('@')) {
-      showToast('Please enter a valid email address.', 'warning');
-      return;
-    }
-    
-    const btn = document.getElementById('purchase-send-otp-btn');
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    
-    if (await sendOtp(method, val)) {
-      document.getElementById('purchase-otp-section').style.display = 'block';
-      btn.textContent = 'Resend OTP';
-      btn.disabled = false;
-      showToast('Verification code sent successfully', 'success');
-    } else {
-      showToast('Failed to send OTP. Please try again.', 'error');
-      btn.textContent = 'Send OTP';
-      btn.disabled = false;
-    }
-  });
-
-  /* verify OTP (purchase) */
-  document.getElementById('purchase-verify-otp-btn').addEventListener('click', async () => {
-    const method = document.querySelector('input[name="purchase-contact-method"]:checked').value;
-    const val = document.getElementById('purchase-contact-value').value.trim();
-    const code = document.getElementById('purchase-otp-code').value.trim();
-    
-    if (!code) {
-      showToast('Please enter the OTP code.', 'warning');
-      return;
-    }
-    
-    document.getElementById('purchase-verify-otp-btn').disabled = true;
-    document.getElementById('purchase-verify-otp-btn').textContent = 'Verifying...';
-    
-    if (await verifyOtp(method, val, code)) {
+  /* ----- Send OTP (purchase) ----- */
+  const purchaseSendOtpBtn = document.getElementById('purchase-send-otp-btn');
+  if (purchaseSendOtpBtn) {
+    purchaseSendOtpBtn.addEventListener('click', async function() {
+      const contactInput = document.getElementById('purchase-contact-value');
+      
+      if (!contactInput) {
+        showToast('Error: Contact input not found', 'error');
+        return;
+      }
+      
+      const method = contactInput.type === 'email' ? 'email' : 'sms';
+      const val = contactInput.value.trim();
+      
+      if (!val) {
+        showToast('Please enter your contact information.', 'warning');
+        return;
+      }
+      
+      if (method === 'email' && !val.includes('@')) {
+        showToast('Please enter a valid email address.', 'warning');
+        return;
+      }
+      
+      this.disabled = true;
+      this.textContent = 'Sending...';
+      
+      // Update the current contact method
+      currentContactMethod = method;
+      
+      // Update the current purchase contact info if it exists
       currentPurchase.contactMethod = method;
       currentPurchase.contactValue = val;
       
-      // Also update the current user
-      currentUser = { contactMethod: method, contactValue: val };
-      document.getElementById('login-button').textContent = 'My Profile';
-      document.getElementById('comment-form').classList.add('user-logged-in');
-      updateFormValidation(); 
-  
-      // Generate auth token
       try {
-        const tokenRes = await fetch('/api/auth-token', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'create',
-            contactMethod: method,
-            contactValue: val
-          })
-        });
-        
-        if (tokenRes.ok) {
-          const tokenData = await tokenRes.json();
-          authToken = tokenData.token;
-          localStorage.setItem('authToken', authToken);
+        const success = await sendOtp(method, val);
+        if (success) {
+          // Hide the initial contact section
+          const initialSection = document.getElementById('initial-contact-section');
+          if (initialSection) initialSection.style.display = 'none';
+          
+          // Show the OTP verification section
+          const otpSection = document.getElementById('purchase-otp-section');
+          if (otpSection) otpSection.style.display = 'block';
+          
+          // Update message with correct contact method
+          const messagePart = method === 'email' ? 'your email' : 'your phone';
+          const messageEl = document.querySelector('.otp-sent-message');
+          if (messageEl) messageEl.textContent = `Verification code sent to ${messagePart}`;
+          
+          showToast('Verification code sent successfully', 'success');
+        } else {
+          showToast('Failed to send verification code. Please try again.', 'error');
+          this.textContent = 'Send Verification Code';
+          this.disabled = false;
         }
       } catch (error) {
-        console.error('Error creating auth token:', error);
+        console.error('Error sending OTP:', error);
+        showToast('An error occurred. Please try again.', 'error');
+        this.textContent = 'Send Verification Code';
+        this.disabled = false;
+      }
+    });
+  }
+
+  /* ----- Verify OTP (purchase) ----- */
+  const purchaseVerifyOtpBtn = document.getElementById('purchase-verify-otp-btn');
+  if (purchaseVerifyOtpBtn) {
+    purchaseVerifyOtpBtn.addEventListener('click', async function() {
+      const contactInput = document.getElementById('purchase-contact-value');
+      const otpCodeInput = document.getElementById('purchase-otp-code');
+      
+      if (!contactInput || !otpCodeInput) {
+        showToast('Error: Required inputs not found', 'error');
+        return;
       }
       
-      closeModal('purchase-otp-modal');
-      openModal('shipping-modal');
-      showToast('Verification successful', 'success');
+      const contactValue = contactInput.value.trim();
+      const code = otpCodeInput.value.trim();
+      const method = currentContactMethod; // Use tracked method instead of checking the input type
       
-      // Pre-populate shipping form with verified contact info
-      if (method === 'email') {
-        document.querySelector('input[name="ship-email"]').value = val;
-      } else if (method === 'sms') {
-        document.querySelector('input[name="ship-phone"]').value = val;
+      if (!code) {
+        showToast('Please enter the verification code', 'warning');
+        return;
       }
-    } else {
-      showToast('Incorrect OTP. Please try again.', 'error');
-      document.getElementById('purchase-verify-otp-btn').disabled = false;
-      document.getElementById('purchase-verify-otp-btn').textContent = 'Verify OTP';
-    }
-  });
+      
+      this.disabled = true;
+      this.textContent = 'Verifying...';
+      
+      try {
+        if (await verifyOtp(method, contactValue, code)) {
+          // Set current purchase contact info
+          currentPurchase.contactMethod = method;
+          currentPurchase.contactValue = contactValue;
+          
+          // Also update current user
+          currentUser = { 
+            contactMethod: method, 
+            contactValue: contactValue 
+          };
+          
+          // Update UI elements
+          const loginBtn = document.getElementById('login-button');
+          if (loginBtn) loginBtn.textContent = 'My Profile';
+          
+          const commentForm = document.getElementById('comment-form');
+          if (commentForm) commentForm.classList.add('user-logged-in');
+          
+          updateFormValidation();
+          
+          // Generate auth token
+          try {
+            const tokenRes = await fetch('/api/auth-token', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                action: 'create',
+                contactMethod: method,
+                contactValue: contactValue
+              })
+            });
+            
+            if (tokenRes.ok) {
+              const tokenData = await tokenRes.json();
+              authToken = tokenData.token;
+              localStorage.setItem('authToken', authToken);
+            }
+          } catch (error) {
+            console.error('Error creating auth token:', error);
+          }
+          
+          // Close OTP modal and open shipping modal
+          closeModal('purchase-otp-modal');
+          openModal('shipping-modal');
+          showToast('Verification successful', 'success');
+          
+          // Pre-populate shipping form with verified contact info
+          if (method === 'email') {
+            const emailField = document.querySelector('input[name="ship-email"]');
+            if (emailField) emailField.value = contactValue;
+          } else if (method === 'sms') {
+            const phoneField = document.querySelector('input[name="ship-phone"]');
+            if (phoneField) phoneField.value = contactValue;
+          }
+        } else {
+          showToast('Incorrect verification code. Please try again.', 'error');
+          this.disabled = false;
+          this.textContent = 'Verify';
+        }
+      } catch (error) {
+        console.error('Error verifying OTP:', error);
+        showToast('An error occurred. Please try again.', 'error');
+        this.disabled = false;
+        this.textContent = 'Verify';
+      }
+    });
+  }
 
   /* shipping form → Stripe */
-  document.getElementById('shipping-form').addEventListener('submit', async e => {
+  document.getElementById('shipping-form')?.addEventListener('submit', async e => {
     e.preventDefault();
     
     const submitBtn = document.getElementById('shipping-submit-btn');
@@ -1069,7 +1175,7 @@ ensureProgressBarInit();
   });
 
   /* ----- Login flow ----- */
-  document.getElementById('login-button').addEventListener('click', () => {
+  document.getElementById('login-button')?.addEventListener('click', () => {
     // If already logged in, show profile instead
     if (currentUser) {
       fetch('/api/login', {
@@ -1116,9 +1222,9 @@ ensureProgressBarInit();
     });
   });
   
-  document.getElementById('login-send-otp-btn').addEventListener('click', async () => {
-    const method = document.querySelector('input[name="login-contact-method"]:checked').value;
-    const val    = document.getElementById('login-contact-value').value.trim();
+  document.getElementById('login-send-otp-btn')?.addEventListener('click', async () => {
+    const method = document.querySelector('input[name="login-contact-method"]:checked')?.value || 'email';
+    const val = document.getElementById('login-contact-value')?.value.trim();
   
     if (!val) {
       showToast('Please enter your contact information.', 'warning');
@@ -1130,34 +1236,41 @@ ensureProgressBarInit();
     }
   
     const btn = document.getElementById('login-send-otp-btn');
-    btn.disabled   = true;
+    if (!btn) return;
+    
+    btn.disabled = true;
     btn.textContent = 'Sending...';
   
     if (await sendOtp(method, val)) {
       // show OTP section
-      document.getElementById('login-otp-section').style.display = 'block';
+      const otpSection = document.getElementById('login-otp-section');
+      if (otpSection) otpSection.style.display = 'block';
+      
       btn.textContent = 'Resend OTP';
-      btn.disabled   = false;
+      btn.disabled = false;
       showToast('Verification code sent successfully', 'success');
     } else {
       showToast('Failed to send verification code. Please try again.', 'error');
       btn.textContent = 'Send OTP';
-      btn.disabled   = false;
+      btn.disabled = false;
     }
   });
   
-  document.getElementById('login-verify-otp-btn').addEventListener('click', async () => {
-    const method = document.querySelector('input[name="login-contact-method"]:checked').value;
-    const val = document.getElementById('login-contact-value').value.trim();
-    const code = document.getElementById('login-otp-code').value.trim();
+  document.getElementById('login-verify-otp-btn')?.addEventListener('click', async () => {
+    const method = document.querySelector('input[name="login-contact-method"]:checked')?.value || 'email';
+    const val = document.getElementById('login-contact-value')?.value.trim();
+    const code = document.getElementById('login-otp-code')?.value.trim();
     
-    if (!code) {
-      showToast('Please enter the OTP code.', 'warning');
+    if (!val || !code) {
+      showToast('Please enter all required information.', 'warning');
       return;
     }
     
-    document.getElementById('login-verify-otp-btn').disabled = true;
-    document.getElementById('login-verify-otp-btn').textContent = 'Verifying...';
+    const verifyBtn = document.getElementById('login-verify-otp-btn');
+    if (!verifyBtn) return;
+    
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
     
     try {
       if (await verifyOtp(method, val, code)) {
@@ -1194,17 +1307,17 @@ ensureProgressBarInit();
       console.error('Login error:', error);
       showToast('An error occurred during login. Please try again.', 'error');
     } finally {
-      document.getElementById('login-verify-otp-btn').disabled = false;
-      document.getElementById('login-verify-otp-btn').textContent = 'Verify & Load Profile';
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify & Load Profile';
     }
   });
   
   /* ----- Comments with OTP ----- */
-  document.getElementById('comment-form').addEventListener('submit', async e => {
+  document.getElementById('comment-form')?.addEventListener('submit', async e => {
     e.preventDefault();
     
     // Get comment text first
-    const text = document.getElementById('comment-text').value.trim();
+    const text = document.getElementById('comment-text')?.value.trim();
     
     if (!text) {
       showToast('Please enter a comment.', 'warning');
@@ -1242,7 +1355,7 @@ ensureProgressBarInit();
     } else {
       // For non-logged in users, use email and OTP verification
       const emailField = document.getElementById('comment-email');
-      const email = emailField.value.trim();
+      const email = emailField?.value.trim();
       
       if (!email) {
         showToast('Please enter your email.', 'warning');
@@ -1280,16 +1393,19 @@ ensureProgressBarInit();
   });
 
   // Handle comment verification
-  document.getElementById('comment-verify-otp-btn').addEventListener('click', async () => {
-    const code = document.getElementById('comment-otp-code').value.trim();
+  document.getElementById('comment-verify-otp-btn')?.addEventListener('click', async () => {
+    const code = document.getElementById('comment-otp-code')?.value.trim();
     
     if (!code) {
       showToast('Please enter the verification code.', 'warning');
       return;
     }
     
-    document.getElementById('comment-verify-otp-btn').disabled = true;
-    document.getElementById('comment-verify-otp-btn').textContent = 'Verifying...';
+    const verifyBtn = document.getElementById('comment-verify-otp-btn');
+    if (!verifyBtn) return;
+    
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
     
     try {
       if (await verifyOtp('email', pendingComment.contactValue, code)) {
@@ -1308,8 +1424,12 @@ ensureProgressBarInit();
         displayComment(newComment);
         
         // Clear form and close modal
-        document.getElementById('comment-email').value = '';
-        document.getElementById('comment-text').value = '';
+        const emailField = document.getElementById('comment-email');
+        if (emailField) emailField.value = '';
+        
+        const commentTextField = document.getElementById('comment-text');
+        if (commentTextField) commentTextField.value = '';
+        
         closeModal('comment-otp-modal');
         showToast('Comment added successfully!', 'success');
       } else {
@@ -1319,8 +1439,8 @@ ensureProgressBarInit();
       console.error('Error adding comment:', error);
       showToast('Error saving comment. Please try again.', 'error');
     } finally {
-      document.getElementById('comment-verify-otp-btn').disabled = false;
-      document.getElementById('comment-verify-otp-btn').textContent = 'Verify OTP';
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP';
     }
   });
     
@@ -1401,8 +1521,8 @@ ensureProgressBarInit();
   
   /* ----- Phone Collection After Google Login ----- */
   // Send OTP to phone number after Google login
-  document.getElementById('phone-send-otp-btn').addEventListener('click', async () => {
-    const phoneNumber = document.getElementById('google-user-phone').value.trim();
+  document.getElementById('phone-send-otp-btn')?.addEventListener('click', async () => {
+    const phoneNumber = document.getElementById('google-user-phone')?.value.trim();
     
     if (!phoneNumber) {
       showToast('Please enter your phone number.', 'warning');
@@ -1410,11 +1530,15 @@ ensureProgressBarInit();
     }
     
     const btn = document.getElementById('phone-send-otp-btn');
+    if (!btn) return;
+    
     btn.disabled = true;
     btn.textContent = 'Sending...';
     
     if (await sendOtp('sms', phoneNumber)) {
-      document.getElementById('phone-otp-section').style.display = 'block';
+      const otpSection = document.getElementById('phone-otp-section');
+      if (otpSection) otpSection.style.display = 'block';
+      
       btn.textContent = 'Resend OTP';
       btn.disabled = false;
       showToast('Verification code sent successfully', 'success');
@@ -1426,17 +1550,20 @@ ensureProgressBarInit();
   });
   
   // Verify phone OTP and update user profile
-  document.getElementById('phone-verify-otp-btn').addEventListener('click', async () => {
-    const phoneNumber = document.getElementById('google-user-phone').value.trim();
-    const code = document.getElementById('phone-otp-code').value.trim();
+  document.getElementById('phone-verify-otp-btn')?.addEventListener('click', async () => {
+    const phoneNumber = document.getElementById('google-user-phone')?.value.trim();
+    const code = document.getElementById('phone-otp-code')?.value.trim();
     
-    if (!code) {
-      showToast('Please enter the OTP code.', 'warning');
+    if (!phoneNumber || !code) {
+      showToast('Please enter all required information.', 'warning');
       return;
     }
     
-    document.getElementById('phone-verify-otp-btn').disabled = true;
-    document.getElementById('phone-verify-otp-btn').textContent = 'Verifying...';
+    const verifyBtn = document.getElementById('phone-verify-otp-btn');
+    if (!verifyBtn) return;
+    
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
     
     try {
       if (await verifyOtp('sms', phoneNumber, code)) {
@@ -1485,62 +1612,61 @@ ensureProgressBarInit();
       console.error('Phone verification error:', error);
       showToast('Error verifying phone number. Please try again.', 'error');
     } finally {
-      document.getElementById('phone-verify-otp-btn').disabled = false;
-      document.getElementById('phone-verify-otp-btn').textContent = 'Verify OTP';
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP';
     }
   });
   
-/* ----- Handle URL parameters for successful checkout ----- */
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('success') === 'true') {
-  // Get stored order information
-  const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
-  
-  // Display order information in the modal
-  if (pendingOrder.amount) {
-    const orderInfoHtml = `
-      <div class="order-success-info" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
-        <p><strong>Order ID:</strong> <span id="success-order-id">${pendingOrder.id || 'order_' + Date.now()}</span></p>
-        <p><strong>Amount Paid:</strong> $${pendingOrder.amount.toFixed(2)}</p>
-        <p><strong>Contact:</strong> ${pendingOrder.contactValue}</p>
-        <p><strong>Shipping Address:</strong> ${pendingOrder.shipping.address}, ${pendingOrder.shipping.city}, ${pendingOrder.shipping.country}</p>
-        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-      </div>
-    `;
+  /* ----- Handle URL parameters for successful checkout ----- */
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success') === 'true') {
+    // Get stored order information
+    const pendingOrder = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
     
-    document.getElementById('order-info-display').innerHTML = orderInfoHtml;
-    
-    // Update purchased spots if it was a "Buy Now" purchase
-    if (pendingOrder.amount === discountedPrice) {
-      purchasedSpots++;
-      localStorage.setItem('purchasedSpots', purchasedSpots.toString());
-      updateSpotsProgress();
+    // Display order information in the modal
+    if (pendingOrder.amount) {
+      const orderInfoHtml = `
+        <div class="order-success-info" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
+          <p><strong>Order ID:</strong> <span id="success-order-id">${pendingOrder.id || 'order_' + Date.now()}</span></p>
+          <p><strong>Amount Paid:</strong> $${pendingOrder.amount.toFixed(2)}</p>
+          <p><strong>Contact:</strong> ${pendingOrder.contactValue}</p>
+          <p><strong>Shipping Address:</strong> ${pendingOrder.shipping.address}, ${pendingOrder.shipping.city}, ${pendingOrder.shipping.country}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+      `;
+      
+      const orderInfoDisplay = document.getElementById('order-info-display');
+      if (orderInfoDisplay) orderInfoDisplay.innerHTML = orderInfoHtml;
+      
+      // Update purchased spots if it was a "Buy Now" purchase
+      if (pendingOrder.amount === discountedPrice) {
+        purchasedSpots++;
+        localStorage.setItem('purchasedSpots', purchasedSpots.toString());
+        updateSpotsProgress();
+      }
     }
+    if (pendingOrder.contactValue) {
+      trackTwitterConversion(pendingOrder.amount, pendingOrder.contactValue);
+    }
+    
+    // Clear pending order from localStorage
+    localStorage.removeItem('pendingOrder');
+    
+    // Show success modal instead of alert
+    openModal('order-success-modal');
+    
+    // Add event listener for the close button if it doesn't exist yet
+    if (!document.getElementById('order-success-close-btn').onclick) {
+      document.getElementById('order-success-close-btn').addEventListener('click', () => {
+        closeModal('order-success-modal');
+      });
+    }
+  } else if (urlParams.get('canceled') === 'true') {
+    showToast('Your order was canceled. If you need assistance, please contact us.', 'warning');
   }
-  if (pendingOrder.contactValue) {
-    trackTwitterConversion(pendingOrder.amount, pendingOrder.contactValue);
-  }
-  
-  // Clear pending order from localStorage
-  localStorage.removeItem('pendingOrder');
-  
-  // Show success modal instead of alert
-  openModal('order-success-modal');
-  
-  // Add event listener for the close button if it doesn't exist yet
-  if (!document.getElementById('order-success-close-btn').onclick) {
-    document.getElementById('order-success-close-btn').addEventListener('click', () => {
-      closeModal('order-success-modal');
-    });
-  }
-} else if (urlParams.get('canceled') === 'true') {
-  showToast('Your order was canceled. If you need assistance, please contact us.', 'warning');
-}
-});
 
-document.addEventListener('DOMContentLoaded', function() {
+  /* ----- Flash Sale Countdown ----- */
   // Set a fixed end date (May 7, 2025 at midnight UTC)
-  // You can change this to any date you want
   const endDate = new Date('2025-05-07T00:00:00Z');
   
   // Function to check if the sale has already ended
@@ -1564,65 +1690,77 @@ document.addEventListener('DOMContentLoaded', function() {
       button.style.opacity = '0.7';
       button.style.cursor = 'not-allowed';
     }
-    
-    return; // Exit early
-  }
-  
-  // Update the countdown every second
-  function updateCountdown() {
-    const currentTime = new Date();
-    const difference = endDate - currentTime;
-    
-    if (difference <= 0) {
-      // Sale has ended
-      document.querySelectorAll('.countdown-value, .card-countdown-value').forEach(el => {
-        el.textContent = '00';
-      });
+  } else {
+    // Update the countdown every second
+    function updateCountdown() {
+      const currentTime = new Date();
+      const difference = endDate - currentTime;
       
-      // Change the button to "Offer Expired"
-      const button = document.querySelector('.super-deal .btn');
-      if (button) {
-        button.textContent = 'Offer Expired';
-        button.disabled = true;
-        button.style.opacity = '0.7';
-        button.style.cursor = 'not-allowed';
+      if (difference <= 0) {
+        // Sale has ended
+        document.querySelectorAll('.countdown-value, .card-countdown-value').forEach(el => {
+          el.textContent = '00';
+        });
+        
+        // Change the button to "Offer Expired"
+        const button = document.querySelector('.super-deal .btn');
+        if (button) {
+          button.textContent = 'Offer Expired';
+          button.disabled = true;
+          button.style.opacity = '0.7';
+          button.style.cursor = 'not-allowed';
+        }
+        
+        return;
       }
       
-      return;
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      
+      // Format with leading zeros
+      const formattedDays = days.toString().padStart(2, '0');
+      const formattedHours = hours.toString().padStart(2, '0');
+      const formattedMinutes = minutes.toString().padStart(2, '0');
+      const formattedSeconds = seconds.toString().padStart(2, '0');
+      
+      // Update top bar countdown
+      const topDays = document.getElementById('top-days');
+      if (topDays) topDays.textContent = formattedDays;
+      
+      const topHours = document.getElementById('top-hours');
+      if (topHours) topHours.textContent = formattedHours;
+      
+      const topMinutes = document.getElementById('top-minutes');
+      if (topMinutes) topMinutes.textContent = formattedMinutes;
+      
+      const topSeconds = document.getElementById('top-seconds');
+      if (topSeconds) topSeconds.textContent = formattedSeconds;
+      
+      // Update card countdown
+      const cardDays = document.getElementById('card-days');
+      if (cardDays) cardDays.textContent = formattedDays;
+      
+      const cardHours = document.getElementById('card-hours');
+      if (cardHours) cardHours.textContent = formattedHours;
+      
+      const cardMinutes = document.getElementById('card-minutes');
+      if (cardMinutes) cardMinutes.textContent = formattedMinutes;
+      
+      const cardSeconds = document.getElementById('card-seconds');
+      if (cardSeconds) cardSeconds.textContent = formattedSeconds;
     }
     
-    // Calculate days, hours, minutes, seconds
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+    // Initial call
+    updateCountdown();
     
-    // Format with leading zeros
-    const formattedDays = days.toString().padStart(2, '0');
-    const formattedHours = hours.toString().padStart(2, '0');
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-    const formattedSeconds = seconds.toString().padStart(2, '0');
-    
-    // Update top bar countdown
-    document.getElementById('top-days').textContent = formattedDays;
-    document.getElementById('top-hours').textContent = formattedHours;
-    document.getElementById('top-minutes').textContent = formattedMinutes;
-    document.getElementById('top-seconds').textContent = formattedSeconds;
-    
-    // Update card countdown
-    document.getElementById('card-days').textContent = formattedDays;
-    document.getElementById('card-hours').textContent = formattedHours;
-    document.getElementById('card-minutes').textContent = formattedMinutes;
-    document.getElementById('card-seconds').textContent = formattedSeconds;
+    // Update every second
+    setInterval(updateCountdown, 1000);
   }
   
-  // Initial call
-  updateCountdown();
-  
-  // Update every second
-  setInterval(updateCountdown, 1000);
-  
-  // Flash Deal Button Functionality (ensure this is accessible)
+  // Flash Deal Button Functionality
   const flashDealButton = document.getElementById('flash-deal-button');
   if (flashDealButton) {
     flashDealButton.addEventListener('click', () => {
@@ -1642,13 +1780,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-});
 
-// Email capture form enhancement
-document.addEventListener('DOMContentLoaded', function() {
-  // Wait for form to be fully loaded
+  /* ----- Email capture form enhancement ----- */
   const mcForm = document.getElementById('mc-embedded-subscribe-form');
-  
   if (mcForm) {
     // Add client-side validation
     mcForm.addEventListener('submit', function(event) {
@@ -1656,10 +1790,10 @@ document.addEventListener('DOMContentLoaded', function() {
       event.preventDefault();
       
       const emailInput = document.getElementById('mce-EMAIL');
-      const emailValue = emailInput.value.trim();
+      const emailValue = emailInput?.value.trim();
       
       // Simple email validation
-      if (!validateEmail(emailValue)) {
+      if (!emailValue || !validateEmail(emailValue)) {
         // Show error message
         const errorResponse = document.getElementById('mce-error-response');
         if (errorResponse) {
@@ -1673,13 +1807,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Focus back on the input
-        emailInput.focus();
+        if (emailInput) emailInput.focus();
       } else {
         // Get the form data
         const formData = new FormData(mcForm);
         
         // Convert form action URL to JSON endpoint
-        let url = mcForm.getAttribute('action').replace('/post?', '/post-json?');
+        let url = mcForm.getAttribute('action')?.replace('/post?', '/post-json?') || '';
         
         // Add callback parameter for JSONP
         if (!url.includes('c=')) {
@@ -1688,7 +1822,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show loading state
         const submitButton = document.getElementById('mc-embedded-subscribe');
-        const originalButtonText = submitButton.textContent;
+        if (!submitButton) return;
+        
+        const originalButtonText = submitButton.textContent || 'Subscribe';
         submitButton.textContent = 'Subscribing...';
         submitButton.disabled = true;
         
@@ -1720,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Clear the input
-            emailInput.value = '';
+            if (emailInput) emailInput.value = '';
           } else {
             // Show error
             const errorResponse = document.getElementById('mce-error-response');
@@ -1743,7 +1879,9 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
           // Remove the script tag
-          document.body.removeChild(script);
+          if (script.parentNode) {
+            document.body.removeChild(script);
+          }
         };
         
         // Add callback parameter to URL
@@ -1766,11 +1904,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('mce-EMAIL');
     if (emailInput) {
       emailInput.addEventListener('focus', function() {
-        this.parentElement.classList.add('focused');
+        const parent = this.parentElement;
+        if (parent) parent.classList.add('focused');
       });
       
       emailInput.addEventListener('blur', function() {
-        this.parentElement.classList.remove('focused');
+        const parent = this.parentElement;
+        if (parent) parent.classList.remove('focused');
       });
     }
   }
@@ -1779,149 +1919,5 @@ document.addEventListener('DOMContentLoaded', function() {
   function validateEmail(email) {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
-  }
-});
-// Add this to your existing script.js file, within the DOMContentLoaded event listener
-// Add this to your existing script.js file, within the DOMContentLoaded event listener
-
-// Initialize contact method default to email
-let currentContactMethod = 'email';
-
-// Toggle between email and phone input methods
-document.addEventListener('click', function(e) {
-  // Toggle contact method link
-  if (e.target && e.target.id === 'toggle-contact-method') {
-    e.preventDefault();
-    const contactInput = document.getElementById('purchase-contact-value');
-    const toggleLink = document.getElementById('toggle-contact-method');
-    
-    if (!contactInput || !toggleLink) return; // Safety check
-    
-    if (contactInput.type === 'email') {
-      // Switch to phone
-      contactInput.type = 'tel';
-      contactInput.placeholder = 'Enter your phone number';
-      toggleLink.textContent = 'Use email address instead';
-      currentContactMethod = 'sms';
-    } else {
-      // Switch to email
-      contactInput.type = 'email';
-      contactInput.placeholder = 'Enter your email address';
-      toggleLink.textContent = 'Use phone number instead';
-      currentContactMethod = 'email';
-    }
-    
-    // Clear the input when switching methods
-    contactInput.value = '';
-  }
-  
-  // Handle resend OTP as a link
-  if (e.target && e.target.id === 'purchase-resend-otp') {
-    e.preventDefault();
-    const contactInput = document.getElementById('purchase-contact-value');
-    
-    if (!contactInput) {
-      showToast('Error: Contact input not found', 'error');
-      return;
-    }
-    
-    const contactValue = contactInput.value.trim();
-    
-    if (!contactValue) {
-      showToast('Please enter your contact information first', 'warning');
-      return;
-    }
-    
-    // Temporarily disable the link
-    e.target.style.opacity = '0.5';
-    e.target.style.pointerEvents = 'none';
-    
-    // Send OTP again
-    sendOtp(currentContactMethod, contactValue).then(success => {
-      if (success) {
-        showToast('Verification code resent successfully', 'success');
-      } else {
-        showToast('Failed to resend verification code. Please try again.', 'error');
-      }
-      
-      // Re-enable the link after a delay
-      setTimeout(() => {
-        e.target.style.opacity = '1';
-        e.target.style.pointerEvents = 'auto';
-      }, 3000);
-    }).catch(err => {
-      console.error('Error sending OTP:', err);
-      showToast('An error occurred. Please try again.', 'error');
-      e.target.style.opacity = '1';
-      e.target.style.pointerEvents = 'auto';
-    });
-  }
-});
-
-// Modify the purchase-send-otp-btn click handler
-// This assumes your DOM is fully loaded when this code runs
-document.getElementById('purchase-send-otp-btn')?.addEventListener('click', async function() {
-  const contactInput = document.getElementById('purchase-contact-value');
-  
-  if (!contactInput) {
-    showToast('Error: Contact input not found', 'error');
-    return;
-  }
-  
-  const method = contactInput.type === 'email' ? 'email' : 'sms';
-  const val = contactInput.value.trim();
-  
-  if (!val) {
-    showToast('Please enter your contact information.', 'warning');
-    return;
-  }
-  
-  if (method === 'email' && !val.includes('@')) {
-    showToast('Please enter a valid email address.', 'warning');
-    return;
-  }
-  
-  const btn = document.getElementById('purchase-send-otp-btn');
-  if (!btn) return;
-  
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  
-  // Update the current contact method
-  currentContactMethod = method;
-  
-  // Update the current purchase contact info if it exists
-  if (typeof currentPurchase !== 'undefined') {
-    currentPurchase.contactMethod = method;
-    currentPurchase.contactValue = val;
-  }
-  
-  try {
-    const success = await sendOtp(method, val);
-    if (success) {
-      // Show OTP verification section
-      const otpSection = document.getElementById('purchase-otp-section');
-      if (otpSection) otpSection.style.display = 'block';
-      
-      // Update message with correct contact method
-      const messagePart = method === 'email' ? 'your email' : 'your phone';
-      const messageEl = document.querySelector('.otp-sent-message');
-      if (messageEl) messageEl.textContent = `Verification code sent to ${messagePart}`;
-      
-      // Change button back to normal
-      btn.textContent = 'Send Verification Code';
-      btn.disabled = false;
-      
-      showToast('Verification code sent successfully', 'success');
-    } else {
-      showToast('Failed to send verification code. Please try again.', 'error');
-      btn.textContent = 'Send Verification Code';
-      btn.disabled = false;
-    }
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    showToast('An error occurred. Please try again.', 'error');
-    btn.textContent = 'Send Verification Code';
-    btn.disabled = false;
   }
 });

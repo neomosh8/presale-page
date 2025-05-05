@@ -1452,6 +1452,80 @@ footer {
     border: 1px solid var(--border-color-input);
     transition: all 0.2s ease;
   }
+  /* Enhanced OTP Modal Styles */
+.contact-method-container {
+    margin-bottom: 20px;
+  }
+  
+  .alternative-method {
+    margin-top: 8px;
+    text-align: right;
+  }
+  
+  .alternative-method a {
+    color: var(--primary-color);
+    font-size: 0.85em;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .alternative-method a:hover {
+    color: var(--primary-color-darker);
+    text-decoration: underline;
+  }
+  
+  .otp-verification-section {
+    margin-top: 25px;
+    text-align: center;
+  }
+  
+  .otp-sent-message {
+    font-size: 0.9em;
+    color: var(--dark-gray);
+    margin-bottom: 15px;
+  }
+  
+  #purchase-otp-code {
+    text-align: center;
+    letter-spacing: 0.2em;
+    font-size: 1.2em;
+    padding: 10px 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .resend-link {
+    display: inline-block;
+    color: var(--medium-gray);
+    font-size: 0.85em;
+    text-decoration: underline;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .resend-link:hover {
+    color: var(--primary-color);
+  }
+  
+  /* Make the verify button stand out */
+  #purchase-verify-otp-btn {
+    margin-top: 15px;
+    background-color: var(--primary-color);
+    width: 100%;
+  }
+  
+  /* Make form elements visually cleaner */
+  #purchase-contact-value {
+    padding: 14px 15px;
+    border-radius: var(--border-radius-md);
+    font-size: 1em;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border-color-input);
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
 /* ---------------------------------------------------------------------------
    Responsiveness
 --------------------------------------------------------------------------- */
