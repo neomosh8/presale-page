@@ -91,27 +91,35 @@ function initGooglePlacesAutocomplete() {
     const autocompleteElement = new google.maps.places.PlaceAutocompleteElement(options);
     autocompleteContainer.appendChild(autocompleteElement);
 
-    // Add event listener for place selection
+
+  if (google.maps.places.PlaceAutocompleteElement) {
     autocompleteElement.addEventListener('gmp-placeselect', event => {
-      handlePlaceSelection(event.place);
-    });
-
-  } else {
-    // Fallback to classic Autocomplete for backward compatibility
-    console.log("Using classic Autocomplete as fallback");
-
-    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-      types: ['address'],
-      componentRestrictions: { country: ['us', 'ca'] }
-    });
-    autocomplete.setFields(['address_components', 'formatted_address']);
-
-    // Add a listener for when a place is selected
-    autocomplete.addListener('place_changed', function() {
-      const place = autocomplete.getPlace();
+      const place = event.place;
+      if (!place.address_components) {
+        console.error('No address components found');
+        return;
+      }
       handlePlaceSelection(place);
-    });
+    });   // ← close the addEventListener call here
+  } else {
+    // fallback to classic Autocomplete…
+        // Fallback to classic Autocomplete for backward compatibility
+        console.log("Using classic Autocomplete as fallback");
+
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+          types: ['address'],
+          componentRestrictions: { country: ['us', 'ca'] }
+        });
+        autocomplete.setFields(['address_components', 'formatted_address']);
+    
+        // Add a listener for when a place is selected
+        autocomplete.addListener('place_changed', function() {
+          const place = autocomplete.getPlace();
+          handlePlaceSelection(place);
+        });
   }
+  
+
 
   // Add focus listener to hide validation message when editing
   addressInput.addEventListener('focus', function() {
