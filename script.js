@@ -1782,30 +1782,33 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 // Add this to your existing script.js file, within the DOMContentLoaded event listener
+// Add this to your existing script.js file, within the DOMContentLoaded event listener
+
+// Initialize contact method default to email
+let currentContactMethod = 'email';
 
 // Toggle between email and phone input methods
 document.addEventListener('click', function(e) {
+  // Toggle contact method link
   if (e.target && e.target.id === 'toggle-contact-method') {
     e.preventDefault();
     const contactInput = document.getElementById('purchase-contact-value');
     const toggleLink = document.getElementById('toggle-contact-method');
+    
+    if (!contactInput || !toggleLink) return; // Safety check
     
     if (contactInput.type === 'email') {
       // Switch to phone
       contactInput.type = 'tel';
       contactInput.placeholder = 'Enter your phone number';
       toggleLink.textContent = 'Use email address instead';
-      
-      // Update any hidden field or state tracking if needed
-      currentPurchase.contactMethod = 'sms';
+      currentContactMethod = 'sms';
     } else {
       // Switch to email
       contactInput.type = 'email';
       contactInput.placeholder = 'Enter your email address';
       toggleLink.textContent = 'Use phone number instead';
-      
-      // Update any hidden field or state tracking if needed
-      currentPurchase.contactMethod = 'email';
+      currentContactMethod = 'email';
     }
     
     // Clear the input when switching methods
@@ -1815,38 +1818,58 @@ document.addEventListener('click', function(e) {
   // Handle resend OTP as a link
   if (e.target && e.target.id === 'purchase-resend-otp') {
     e.preventDefault();
-    const contactMethod = document.getElementById('purchase-contact-value').type === 'email' ? 'email' : 'sms';
-    const contactValue = document.getElementById('purchase-contact-value').value.trim();
+    const contactInput = document.getElementById('purchase-contact-value');
     
-    if (contactValue) {
-      // Temporarily disable the link
-      e.target.style.opacity = '0.5';
-      e.target.style.pointerEvents = 'none';
-      
-      // Send OTP again
-      sendOtp(contactMethod, contactValue).then(success => {
-        if (success) {
-          showToast('Verification code resent successfully', 'success');
-        } else {
-          showToast('Failed to resend verification code. Please try again.', 'error');
-        }
-        
-        // Re-enable the link after a delay
-        setTimeout(() => {
-          e.target.style.opacity = '1';
-          e.target.style.pointerEvents = 'auto';
-        }, 3000);
-      });
-    } else {
-      showToast('Please enter your contact information first', 'warning');
+    if (!contactInput) {
+      showToast('Error: Contact input not found', 'error');
+      return;
     }
+    
+    const contactValue = contactInput.value.trim();
+    
+    if (!contactValue) {
+      showToast('Please enter your contact information first', 'warning');
+      return;
+    }
+    
+    // Temporarily disable the link
+    e.target.style.opacity = '0.5';
+    e.target.style.pointerEvents = 'none';
+    
+    // Send OTP again
+    sendOtp(currentContactMethod, contactValue).then(success => {
+      if (success) {
+        showToast('Verification code resent successfully', 'success');
+      } else {
+        showToast('Failed to resend verification code. Please try again.', 'error');
+      }
+      
+      // Re-enable the link after a delay
+      setTimeout(() => {
+        e.target.style.opacity = '1';
+        e.target.style.pointerEvents = 'auto';
+      }, 3000);
+    }).catch(err => {
+      console.error('Error sending OTP:', err);
+      showToast('An error occurred. Please try again.', 'error');
+      e.target.style.opacity = '1';
+      e.target.style.pointerEvents = 'auto';
+    });
   }
 });
 
 // Modify the purchase-send-otp-btn click handler
-document.getElementById('purchase-send-otp-btn').addEventListener('click', async function() {
-  const method = document.getElementById('purchase-contact-value').type === 'email' ? 'email' : 'sms';
-  const val = document.getElementById('purchase-contact-value').value.trim();
+// This assumes your DOM is fully loaded when this code runs
+document.getElementById('purchase-send-otp-btn')?.addEventListener('click', async function() {
+  const contactInput = document.getElementById('purchase-contact-value');
+  
+  if (!contactInput) {
+    showToast('Error: Contact input not found', 'error');
+    return;
+  }
+  
+  const method = contactInput.type === 'email' ? 'email' : 'sms';
+  const val = contactInput.value.trim();
   
   if (!val) {
     showToast('Please enter your contact information.', 'warning');
@@ -1859,27 +1882,45 @@ document.getElementById('purchase-send-otp-btn').addEventListener('click', async
   }
   
   const btn = document.getElementById('purchase-send-otp-btn');
+  if (!btn) return;
+  
   btn.disabled = true;
   btn.textContent = 'Sending...';
   
-  // Update the current purchase contact method based on input type
-  currentPurchase.contactMethod = method;
+  // Update the current contact method
+  currentContactMethod = method;
   
-  if (await sendOtp(method, contactValue)) {
-    // Show OTP verification section
-    document.getElementById('purchase-otp-section').style.display = 'block';
-    
-    // Update message with correct contact method
-    const messagePart = method === 'email' ? 'your email' : 'your phone';
-    document.querySelector('.otp-sent-message').textContent = `Verification code sent to ${messagePart}`;
-    
-    // Change button back to normal
-    btn.textContent = 'Send Verification Code';
-    btn.disabled = false;
-    
-    showToast('Verification code sent successfully', 'success');
-  } else {
-    showToast('Failed to send verification code. Please try again.', 'error');
+  // Update the current purchase contact info if it exists
+  if (typeof currentPurchase !== 'undefined') {
+    currentPurchase.contactMethod = method;
+    currentPurchase.contactValue = val;
+  }
+  
+  try {
+    const success = await sendOtp(method, val);
+    if (success) {
+      // Show OTP verification section
+      const otpSection = document.getElementById('purchase-otp-section');
+      if (otpSection) otpSection.style.display = 'block';
+      
+      // Update message with correct contact method
+      const messagePart = method === 'email' ? 'your email' : 'your phone';
+      const messageEl = document.querySelector('.otp-sent-message');
+      if (messageEl) messageEl.textContent = `Verification code sent to ${messagePart}`;
+      
+      // Change button back to normal
+      btn.textContent = 'Send Verification Code';
+      btn.disabled = false;
+      
+      showToast('Verification code sent successfully', 'success');
+    } else {
+      showToast('Failed to send verification code. Please try again.', 'error');
+      btn.textContent = 'Send Verification Code';
+      btn.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    showToast('An error occurred. Please try again.', 'error');
     btn.textContent = 'Send Verification Code';
     btn.disabled = false;
   }
