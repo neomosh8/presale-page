@@ -808,14 +808,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
   
-  // Close modal when clicking outside content
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal(modal.id);
-      }
-    });
+// Close modal when clicking outside content (except for shipping modal)
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    // Skip closing shipping-modal when clicking outside
+    if (modal.id === 'shipping-modal') {
+      return; // Do nothing for shipping modal
+    }
+    
+    // For all other modals, close when clicking outside
+    if (e.target === modal) {
+      closeModal(modal.id);
+    }
   });
+});
   
   // Close profile modal with button
   document.getElementById('profile-close-btn')?.addEventListener('click', () => {
