@@ -1243,88 +1243,86 @@ footer {
 
 
       /* Styles for Email Capture Card */
-/* Sleeker Email Capture Card */
+/* Simple Email Capture Design */
 #email-updates-section {
-    margin: 0 0 20px;
-    padding: 0;
+    margin: 20px 0;
   }
   
-  .email-capture-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(239, 246, 255, 0.9) 100%);
-    border-radius: var(--border-radius-lg);
-    border: 1px solid rgba(230, 230, 230, 0.7);
-    box-shadow: var(--shadow-soft);
-    overflow: hidden;
-    display: flex;
-    position: relative;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin-top: 20px;
-    max-height: 160px; /* Make it more compact */
+  .simple-email-card {
+    background: linear-gradient(to right, #f8fafc, #eff6ff);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(230, 230, 230, 0.6);
   }
   
-  .email-card-content {
-    padding: 25px 30px; /* Reduce padding */
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center content vertically */
+  .email-content {
+    text-align: center;
+    margin-bottom: 15px;
   }
   
-  .email-card-image {
-    width: 30%; /* Make image area slightly smaller */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(239, 246, 255, 0.7);
-    padding: 10px; /* Reduce padding */
-  }
-  
-  #email-updates-section h3 {
-    font-size: 1.4em; /* Smaller heading */
-    font-weight: 700;
+  .email-content h3 {
+    font-size: 1.3em;
+    font-weight: 600;
     color: var(--primary-color);
-    margin-bottom: 8px; /* Reduced margin */
+    margin: 0 0 5px 0;
   }
   
-  #email-updates-section p {
-    font-size: 0.95em; /* Smaller text */
+  .email-content p {
+    font-size: 0.95em;
     color: var(--dark-gray);
-    margin-bottom: 15px; /* Reduced margin */
-    max-width: 500px;
-    line-height: 1.5; /* Tighter line height */
+    margin: 0;
   }
   
-  /* Mailchimp form styles */
-  .mc-field-group {
+  .email-form {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .form-row {
     display: flex;
     gap: 10px;
-    margin-bottom: 0; /* Remove bottom margin */
   }
   
   #mce-EMAIL {
     flex: 1;
-    padding: 10px 15px; /* Smaller input field */
+    padding: 10px 15px;
     border: 1px solid var(--border-color-input);
-    border-radius: var(--border-radius-md);
-    font-size: 0.95em; /* Smaller font */
-    background: white;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    font-size: 0.95em;
+    min-width: 0; /* Prevents flex item from overflowing */
   }
   
   #mc-embedded-subscribe {
-    padding: 10px 20px; /* Smaller button */
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
     white-space: nowrap;
-    font-size: 0.95em; /* Smaller font */
+    min-width: 100px; /* Prevent button from getting too wide */
+    max-width: 150px; /* Prevent excessive width on desktop */
   }
   
-  /* Responsive adjustment */
-  @media (max-width: 768px) {
-    .email-capture-card {
-      max-height: none; /* Allow natural height on mobile */
+  #mc-embedded-subscribe:hover {
+    background-color: var(--primary-color-darker);
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 640px) {
+    .form-row {
+      flex-direction: column;
     }
     
-    .email-card-content {
-      padding: 20px;
+    #mc-embedded-subscribe {
+      width: 100%;
+      max-width: none;
+    }
+    
+    #mce-EMAIL {
+      width: 100%;
     }
   }
   /* Enhanced OTP Modal Styles */
