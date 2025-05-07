@@ -695,48 +695,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
   // Function to update spots progress bar
-  function updateSpotsProgress() {
-    console.log('Updating spots progress, MAX_SPOTS:', MAX_SPOTS, 'purchasedSpots:', purchasedSpots);
-    
-    const progressFill = document.getElementById('spots-progress-fill');
-    const spotsAvailableElement = document.getElementById('spots-available');
-    const spotsTotalElement = document.getElementById('spots-total');
-    const spotsContainer = document.querySelector('.spots-progress-container');
-    
-    // If any element is missing, exit early
-    if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
-      console.error('Required elements for progress bar not found. Check your HTML.');
-      return;
-    }
-    
-    const spotsAvailable = MAX_SPOTS - purchasedSpots;
-    
-    // Calculate percentage filled
-    const percentFilled = (purchasedSpots / MAX_SPOTS) * 100;
-    console.log('Percent filled:', percentFilled + '%');
-    
-    // Update the progress bar fill width
-    progressFill.style.width = `${percentFilled}%`;
-    
-    // Update text counter
-    spotsAvailableElement.textContent = spotsAvailable;
-    spotsTotalElement.textContent = MAX_SPOTS;
-    
-    // Add urgency styling when less than 30% spots remain
-    if (spotsAvailable <= MAX_SPOTS * 0.3) {
-      spotsContainer.classList.add('spots-limited');
-    } else {
-      spotsContainer.classList.remove('spots-limited');
-    }
-    
-    // Disable button if no spots available
-    const buyNowButton = document.getElementById('buy-now-button');
-    if (spotsAvailable <= 0 && buyNowButton) {
-      buyNowButton.disabled = true;
-      buyNowButton.textContent = 'Sold Out';
-      document.querySelector('.option-card:last-child').classList.add('sold-out');
-    }
+ // Function to update spots progress bar
+function updateSpotsProgress() {
+  // Add a fixed offset to show more purchases than actual
+  const spotsSoldOffset = 12;  // Add 6 more to the count to show higher demand
+  
+  console.log('Updating spots progress, MAX_SPOTS:', MAX_SPOTS, 'purchasedSpots:', purchasedSpots + spotsSoldOffset);
+  
+  const progressFill = document.getElementById('spots-progress-fill');
+  const spotsAvailableElement = document.getElementById('spots-available');
+  const spotsTotalElement = document.getElementById('spots-total');
+  const spotsContainer = document.querySelector('.spots-progress-container');
+  
+  // If any element is missing, exit early
+  if (!progressFill || !spotsAvailableElement || !spotsTotalElement || !spotsContainer) {
+    console.error('Required elements for progress bar not found. Check your HTML.');
+    return;
   }
+  
+  // Apply the offset to the displayed purchase count
+  const displayedPurchases = purchasedSpots + spotsSoldOffset;
+  const spotsAvailable = Math.max(0, MAX_SPOTS - displayedPurchases);
+  
+  // Calculate percentage filled
+  const percentFilled = Math.min(100, (displayedPurchases / MAX_SPOTS) * 100);
+  console.log('Percent filled:', percentFilled + '%');
+  
+  // Update the progress bar fill width
+  progressFill.style.width = `${percentFilled}%`;
+  
+  // Update text counter
+  spotsAvailableElement.textContent = spotsAvailable;
+  spotsTotalElement.textContent = MAX_SPOTS;
+  
+  // Add urgency styling when less than 30% spots remain
+  if (spotsAvailable <= MAX_SPOTS * 0.3) {
+    spotsContainer.classList.add('spots-limited');
+  } else {
+    spotsContainer.classList.remove('spots-limited');
+  }
+  
+  // Disable button if no spots available
+  const buyNowButton = document.getElementById('buy-now-button');
+  if (spotsAvailable <= 0 && buyNowButton) {
+    buyNowButton.disabled = true;
+    buyNowButton.textContent = 'Sold Out';
+    document.querySelector('.option-card:last-child').classList.add('sold-out');
+  }
+}
 
   // Get configuration and purchase count from server
   async function initializeSpots() {
