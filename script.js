@@ -673,13 +673,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ----- Populate prices ----- */
-  document.getElementById('full-price-display').textContent = formatCurrency(FULL_PRICE);
-  document.getElementById('deposit-price-display').textContent = formatCurrency(depositAmount);
-  document.getElementById('deposit-description').innerHTML = 
-  "Get the Early Bird discount! Pay <strong>" + formatCurrency(depositAmount) + "</strong> today and just <strong>" + formatCurrency(349-depositAmount) + "</strong> later when your OneSpark ships in Q4 2025. That's a total of <strong>$349</strong> - a 30% savings off the retail price!";
-  document.getElementById('buy-now-original-price').textContent = formatCurrency(FULL_PRICE);
+  const fullPriceDisplay = document.getElementById('full-price-display');
+  if (fullPriceDisplay) fullPriceDisplay.textContent = formatCurrency(FULL_PRICE);
+
+  const depositPriceDisplay = document.getElementById('deposit-price-display');
+  if (depositPriceDisplay) depositPriceDisplay.textContent = formatCurrency(depositAmount);
+
+  const depositDescription = document.getElementById('deposit-description');
+  if (depositDescription) {
+    depositDescription.innerHTML =
+      "Get the Early Bird discount! Pay <strong>" +
+      formatCurrency(depositAmount) +
+      "</strong> today and just <strong>" +
+      formatCurrency(349 - depositAmount) +
+      "</strong> later when your OneSpark ships in Q4 2025. That's a total of <strong>$349</strong> - a 30% savings off the retail price!";
+  }
+
+  const buyNowOriginal = document.getElementById('buy-now-original-price');
+  if (buyNowOriginal) buyNowOriginal.textContent = formatCurrency(FULL_PRICE);
+
   const buyNowDisp = document.getElementById('buy-now-price-display');
-  buyNowDisp.childNodes[buyNowDisp.childNodes.length-1].nodeValue = ` ${formatCurrency(discountedPrice)}`;
+  if (buyNowDisp) {
+    buyNowDisp.childNodes[buyNowDisp.childNodes.length - 1].nodeValue =
+      ` ${formatCurrency(discountedPrice)}`;
+  }
 
   // Fetch max spots environment variable
   fetch('/api/get-config')
